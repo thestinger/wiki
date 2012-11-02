@@ -82,8 +82,7 @@ def update(filename):
 @route('/register/json/', method='POST')
 def register():
     username, password = request.json["username"], request.json["password"]
-    hashed = scrypt.encrypt(b64encode(urandom(64)), request.json["password"],
-                            maxtime=0.5)
+    hashed = scrypt.encrypt(b64encode(urandom(64)), password, maxtime=0.5)
     connection.execute(users.insert().values(username=username,
                                              password_hash=hashed))
     return {"token": make_login_token(username)}
