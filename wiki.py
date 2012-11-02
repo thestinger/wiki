@@ -60,13 +60,14 @@ def update(filename):
 @route('/register/json/', method='POST')
 def register():
     username, password = request.json["username"], request.json["password"]
-    mac = scrypt.encrypt(b64encode(urandom(64)), request.json["password"])
+    mac = scrypt.encrypt(b64encode(urandom(64)), request.json["password"],
+                         maxtime=0.5)
     connection.execute(users.insert().values(username=username, mac=mac))
 
 @route('/login/json/', method='POST')
 def login():
     username, password = request.json["username"], request.json["password"]
     mac, = connection.execute(sql.select([users.c.mac], users.c.username == username)).fetchone()
-    scrypt.decrypt(mac, request.json["password"])
+    scrypt.decrypt(mac, request.json["password"], maxtime=0.5)
 
 run(host='localhost', port=8080)
