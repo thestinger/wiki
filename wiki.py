@@ -65,7 +65,9 @@ def log():
 
 @route('/update/json/<filename>', method='POST')
 def update(filename):
-    username = check_login_token(request.json["token"])
+    message, page, token = request.json["message"], request.json["page"], request.json["token"]
+
+    username = check_login_token(token)
 
     if username is None:
         return {"error": "invalid login token"}
@@ -73,14 +75,14 @@ def update(filename):
     signature = git.Signature(username, 'email@example.com')
 
     with open(path.join("repo", filename + '.rst'), "w") as f:
-        f.write(request.json["page"])
+        f.write(page)
     generate_html_page(filename)
 
-    oid = repo.write(git.GIT_OBJ_BLOB, request.json["page"])
+    oid = repo.write(git.GIT_OBJ_BLOB, page)
     bld = repo.TreeBuilder()
     bld.insert(filename + '.rst', oid, 100644)
     tree = bld.write()
-    repo.create_commit('refs/heads/master', signature, signature, 'update',
+    repo.create_commit('refs/heads/master', signature, signature, message,
                        tree, [repo.head.oid])
 
 @route('/register/json/', method='POST')
