@@ -14,7 +14,7 @@ engine = sql.create_engine("sqlite:///wiki.sqlite3", echo=True)
 metadata = sql.MetaData()
 users = sql.Table("users", metadata,
                   sql.Column("username", sql.String, primary_key = True),
-                  sql.Column("mac", sql.Binary, nullable = False))
+                  sql.Column("password_hash", sql.Binary, nullable = False))
 metadata.create_all(engine)
 
 connection = engine.connect()
@@ -60,14 +60,16 @@ def update(filename):
 @route('/register/json/', method='POST')
 def register():
     username, password = request.json["username"], request.json["password"]
-    mac = scrypt.encrypt(b64encode(urandom(64)), request.json["password"],
-                         maxtime=0.5)
-    connection.execute(users.insert().values(username=username, mac=mac))
+    hashed = scrypt.encrypt(b64encode(urandom(64)), request.json["password"],
+                            maxtime=0.5)
+    connection.execute(users.insert().values(username=username,
+                                             password_hash=hashed))
 
 @route('/login/json/', method='POST')
 def login():
     username, password = request.json["username"], request.json["password"]
-    mac, = connection.execute(sql.select([users.c.mac], users.c.username == username)).fetchone()
-    scrypt.decrypt(mac, request.json["password"], maxtime=0.5)
+    hashed, = connection.execute(sql.select([users.c.password_hash],
+                                            users.c.username == username)).first()
+    scrypt.decrypt(hashed, password, maxtime=0.5)
 
 run(host='localhost', port=8080)
