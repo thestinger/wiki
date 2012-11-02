@@ -23,9 +23,8 @@ connection = engine.connect()
 
 repo = git.init_repository("repo", False)
 
-author = git.Signature('wiki', 'danielmicay@gmail.com')
-
 if 'refs/heads/master' not in repo.listall_references():
+    author = git.Signature('wiki', 'danielmicay@gmail.com')
     tree = repo.TreeBuilder().write()
     repo.create_commit('refs/heads/master', author, author,
                        'initialize repository', tree, [])
@@ -66,8 +65,12 @@ def log():
 
 @route('/update/json/<filename>', method='POST')
 def update(filename):
-    if check_login_token(request.json["token"]) is None:
+    username = check_login_token(request.json["token"])
+
+    if username is None:
         return {"error": "invalid login token"}
+
+    signature = git.Signature(username, 'email@example.com')
 
     with open(path.join("repo", filename + '.rst'), "w") as f:
         f.write(request.json["page"])
@@ -77,7 +80,8 @@ def update(filename):
     bld = repo.TreeBuilder()
     bld.insert(filename + '.rst', oid, 100644)
     tree = bld.write()
-    repo.create_commit('refs/heads/master', author, author, 'update', tree, [repo.head.oid])
+    repo.create_commit('refs/heads/master', signature, signature, 'update',
+                       tree, [repo.head.oid])
 
 @route('/register/json/', method='POST')
 def register():
