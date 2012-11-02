@@ -3,13 +3,14 @@
 import os.path as path
 
 import pygit2 as git
-from bottle import route, run, static_file
+from bottle import request, route, run, static_file
 from docutils.core import publish_file
 
 repo = git.init_repository("repo", False)
 
+author = git.Signature('wiki', 'danielmicay@gmail.com')
+
 if 'refs/heads/master' not in repo.listall_references():
-    author = git.Signature('wiki', 'danielmicay@gmail.com')
     tree = repo.TreeBuilder().write()
     repo.create_commit('refs/heads/master', author, author,
                        'initialize repository', tree, [])
@@ -30,5 +31,17 @@ def html_page(filename):
 @route('/log.json')
 def log():
     return {"log": [c.message for c in repo.walk(repo.head.oid, git.GIT_SORT_TIME)]}
+
+@route('/update/json/<filename>', method='POST')
+def update(filename):
+    oid = repo.write(git.GIT_OBJ_BLOB, request.json["page"])
+    bld = repo.TreeBuilder()
+    bld.insert(filename + '.rst', oid, 100644)
+    tree = bld.write()
+    repo.create_commit('refs/heads/master', author, author, 'update', tree, [repo.head.oid])
+
+    with open(path.join("repo", filename + '.rst'), "w") as f:
+        f.write(request.json["page"])
+    generate_html_page(filename)
 
 run(host='localhost', port=8080)
