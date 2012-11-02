@@ -47,15 +47,15 @@ def log():
 
 @route('/update/json/<filename>', method='POST')
 def update(filename):
+    with open(path.join("repo", filename + '.rst'), "w") as f:
+        f.write(request.json["page"])
+    generate_html_page(filename)
+
     oid = repo.write(git.GIT_OBJ_BLOB, request.json["page"])
     bld = repo.TreeBuilder()
     bld.insert(filename + '.rst', oid, 100644)
     tree = bld.write()
     repo.create_commit('refs/heads/master', author, author, 'update', tree, [repo.head.oid])
-
-    with open(path.join("repo", filename + '.rst'), "w") as f:
-        f.write(request.json["page"])
-    generate_html_page(filename)
 
 @route('/register/json/', method='POST')
 def register():
