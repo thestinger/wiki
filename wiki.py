@@ -27,4 +27,8 @@ def page(filename):
 def html_page(filename):
     return static_file(filename + '.html', root="generated")
 
+@route('/log.json')
+def log():
+    return {"log": [c.message for c in repo.walk(repo.head.oid, git.GIT_SORT_TIME)]}
+
 run(host='localhost', port=8080)
