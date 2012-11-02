@@ -12,7 +12,7 @@ engine = sql.create_engine("sqlite:///wiki.sqlite3", echo=True)
 metadata = sql.MetaData()
 visitors = sql.Table("users", metadata,
                      sql.Column("username", sql.String, primary_key = True),
-                     sql.Column("password", sql.String))
+                     sql.Column("password", sql.Binary, nullable = False))
 metadata.create_all(engine)
 
 repo = git.init_repository("repo", False)
