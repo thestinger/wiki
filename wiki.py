@@ -86,6 +86,7 @@ def register():
                             maxtime=0.5)
     connection.execute(users.insert().values(username=username,
                                              password_hash=hashed))
+    return {"token": make_login_token(username)}
 
 @route('/login/json/', method='POST')
 def login():
