@@ -3,8 +3,17 @@
 import os.path as path
 
 import pygit2 as git
+import scrypt
+import sqlalchemy as sql
 from bottle import request, route, run, static_file
 from docutils.core import publish_file
+
+engine = sql.create_engine("sqlite:///wiki.sqlite3", echo=True)
+metadata = sql.MetaData()
+visitors = sql.Table("users", metadata,
+                     sql.Column("username", sql.String, primary_key = True),
+                     sql.Column("password", sql.String))
+metadata.create_all(engine)
 
 repo = git.init_repository("repo", False)
 
