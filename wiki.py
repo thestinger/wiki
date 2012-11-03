@@ -9,7 +9,7 @@ from os import urandom
 import pygit2 as git
 import scrypt
 import sqlalchemy as sql
-from bottle import request, route, run, static_file
+from bottle import get, post, request, run, static_file
 from docutils.core import publish_file
 
 engine = sql.create_engine("sqlite:///wiki.sqlite3", echo=True)
@@ -50,16 +50,16 @@ def check_login_token(token):
     if hmac.compare_digest(mac, generate_mac(username)):
         return username
 
-@route('/page/<filename>.rst')
+@get('/page/<filename>.rst')
 def page(filename):
     return static_file(filename + '.rst', root="repo",
                        mimetype="text/x-rst; charset=UTF-8")
 
-@route('/page/<filename>.html')
+@get('/page/<filename>.html')
 def html_page(filename):
     return static_file(filename + '.html', root="generated")
 
-@route('/log.json')
+@get('/log.json')
 def log():
     commits = repo.walk(repo.head.oid, git.GIT_SORT_TIME)
 
@@ -73,7 +73,7 @@ def log():
                      "author": c.author.name}
                     for c in commits]}
 
-@route('/update/json/<filename>', method='POST')
+@post('/update/json/<filename>')
 def update(filename):
     message, page, token = request.json["message"], request.json["page"], request.json["token"]
 
@@ -97,7 +97,7 @@ def update(filename):
     repo.create_commit('refs/heads/master', signature, signature, message,
                        tree, [repo.head.oid])
 
-@route('/register.json', method='POST')
+@post('/register.json')
 def register():
     email, username, password = request.json["email"], request.json["username"], request.json["password"]
     hashed = scrypt.encrypt(b64encode(urandom(64)), password, maxtime=0.5)
@@ -106,7 +106,7 @@ def register():
                                              password_hash=hashed))
     return {"token": make_login_token(username)}
 
-@route('/login.json', method='POST')
+@post('/login.json')
 def login():
     username, password = request.json["username"], request.json["password"]
     hashed, = connection.execute(sql.select([users.c.password_hash],
