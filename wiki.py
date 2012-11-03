@@ -52,7 +52,8 @@ def check_login_token(token):
 
 @route('/page/<filename>.rst')
 def page(filename):
-    return static_file(filename + '.rst', root="repo")
+    return static_file(filename + '.rst', root="repo",
+                       mimetype="text/x-rst; charset=UTF-8")
 
 @route('/page/<filename>.html')
 def html_page(filename):
