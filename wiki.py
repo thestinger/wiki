@@ -17,6 +17,8 @@ metadata = sql.MetaData()
 users = sql.Table("users", metadata,
                   sql.Column("username", sql.String, primary_key = True),
                   sql.Column("email", sql.String, nullable = False),
+                  sql.Column("email_verified", sql.Boolean, nullable = False,
+                             default = False),
                   sql.Column("password_hash", sql.Binary, nullable = False))
 metadata.create_all(engine)
 
