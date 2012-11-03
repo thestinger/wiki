@@ -41,8 +41,6 @@ KEY = b64encode(urandom(256))
 def generate_mac(s):
     return hmac.new(KEY, s.encode(), sha256).hexdigest()
 
-# TODO: these should also include a timestamp, and expire eventually
-
 def make_login_token(username):
     return "|".join((generate_mac(username), username))
 
