@@ -60,7 +60,9 @@ def html_page(filename):
 
 @route('/log.json')
 def log():
-    return {"log": [c.message for c in repo.walk(repo.head.oid, git.GIT_SORT_TIME)]}
+    return {"log": [{"message": c.message,
+                     "author": c.author.name}
+                    for c in repo.walk(repo.head.oid, git.GIT_SORT_TIME)]}
 
 @route('/update/json/<filename>', method='POST')
 def update(filename):
