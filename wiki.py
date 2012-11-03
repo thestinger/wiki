@@ -61,9 +61,17 @@ def html_page(filename):
 
 @route('/log.json')
 def log():
+    commits = repo.walk(repo.head.oid, git.GIT_SORT_TIME)
+
+    try:
+        page = request.query["page"] + ".rst"
+        commits = filter(lambda c: page in c.tree, commits)
+    except KeyError:
+        pass
+
     return {"log": [{"message": c.message,
                      "author": c.author.name}
-                    for c in repo.walk(repo.head.oid, git.GIT_SORT_TIME)]}
+                    for c in commits]}
 
 @route('/update/json/<filename>', method='POST')
 def update(filename):
