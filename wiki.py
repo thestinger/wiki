@@ -89,7 +89,7 @@ def update(filename):
     repo.create_commit('refs/heads/master', signature, signature, message,
                        tree, [repo.head.oid])
 
-@route('/register/json/', method='POST')
+@route('/register.json', method='POST')
 def register():
     email, username, password = request.json["email"], request.json["username"], request.json["password"]
     hashed = scrypt.encrypt(b64encode(urandom(64)), password, maxtime=0.5)
@@ -98,7 +98,7 @@ def register():
                                              password_hash=hashed))
     return {"token": make_login_token(username)}
 
-@route('/login/json/', method='POST')
+@route('/login.json', method='POST')
 def login():
     username, password = request.json["username"], request.json["password"]
     hashed, = connection.execute(sql.select([users.c.password_hash],
