@@ -16,6 +16,7 @@ engine = sql.create_engine("sqlite:///wiki.sqlite3", echo=True)
 metadata = sql.MetaData()
 users = sql.Table("users", metadata,
                   sql.Column("username", sql.String, primary_key = True),
+                  sql.Column("email", sql.String, nullable = False),
                   sql.Column("password_hash", sql.Binary, nullable = False))
 metadata.create_all(engine)
 
@@ -72,7 +73,9 @@ def update(filename):
     if username is None:
         return {"error": "invalid login token"}
 
-    signature = git.Signature(username, 'email@example.com')
+    email, = connection.execute(sql.select([users.c.email],
+                                           users.c.username == username)).first()
+    signature = git.Signature(username, email)
 
     with open(path.join("repo", filename + '.rst'), "w") as f:
         f.write(page)
@@ -87,9 +90,10 @@ def update(filename):
 
 @route('/register/json/', method='POST')
 def register():
-    username, password = request.json["username"], request.json["password"]
+    email, username, password = request.json["email"], request.json["username"], request.json["password"]
     hashed = scrypt.encrypt(b64encode(urandom(64)), password, maxtime=0.5)
     connection.execute(users.insert().values(username=username,
+                                             email=email,
                                              password_hash=hashed))
     return {"token": make_login_token(username)}
 
