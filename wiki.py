@@ -117,13 +117,37 @@ def update(filename):
     repo.create_commit('refs/heads/master', signature, signature, message,
                        tree, [repo.head.oid])
 
-@post('/register.json')
-def register():
-    email, username, password = request.json["email"], request.json["username"], request.json["password"]
+def register(username, password, email):
     hashed = scrypt.encrypt(b64encode(urandom(64)), password, maxtime=0.5)
     connection.execute(users.insert().values(username=username,
                                              email=email,
                                              password_hash=hashed))
+
+@get('/register.html')
+def html_register():
+    return static_file("register.html", root="static")
+
+@post('/register.html')
+def form_register():
+    email = request.forms["email"]
+    password = request.forms["password"]
+    username = request.forms["username"]
+
+    register(username, password, email)
+
+    response.set_cookie("token", make_login_token(username))
+
+@post('/register.json')
+def json_register():
+    try:
+        username = request.json["username"]
+        password = request.json["password"]
+        email = request.json["email"]
+    except KeyError as e:
+        return {"error": "missing {} key".format(e.args[0])}
+
+    register(username, password, email)
+
     return {"token": make_login_token(username)}
 
 @post('/login.json')
