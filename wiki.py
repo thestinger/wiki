@@ -12,8 +12,6 @@ import sqlalchemy as sql
 from bottle import get, post, response, request, run, static_file, template
 from docutils.core import publish_file, publish_string
 
-RST_MIME = "text/x-rst; charset=UTF-8"
-
 engine = sql.create_engine("sqlite:///wiki.sqlite3", echo=True)
 metadata = sql.MetaData()
 users = sql.Table("users", metadata,
@@ -59,15 +57,9 @@ def get_page_revision(filename, revision):
 
 @get('/page/<filename>.rst')
 def rst_page(filename):
-    response.content_type = RST_MIME
-
-    revision = request.query.get("revision")
-
-    if revision is None:
-        return static_file(filename + '.rst', root="repo",
-                           mimetype=RST_MIME)
-    else:
-        return get_page_revision(filename, revision)
+    response.content_type = "text/x-rst; charset=UTF-8"
+    revision = request.query.get("revision", repo.head.oid)
+    return get_page_revision(filename, revision)
 
 @get('/page/<filename>.html')
 def html_page(filename):
