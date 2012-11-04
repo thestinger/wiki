@@ -58,7 +58,7 @@ def get_page_revision(filename, revision):
     return repo[repo[revision].tree[filename + ".rst"].oid].data
 
 @get('/page/<filename>.rst')
-def page(filename):
+def rst_page(filename):
     response.content_type = RST_MIME
 
     revision = request.query.get("revision")
