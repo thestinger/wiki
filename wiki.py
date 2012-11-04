@@ -10,7 +10,7 @@ import pygit2 as git
 import scrypt
 import sqlalchemy as sql
 from bottle import get, post, response, request, run, static_file, template
-from docutils.core import publish_file, publish_string
+from docutils.core import publish_string
 
 engine = sql.create_engine("sqlite:///wiki.sqlite3", echo=True)
 metadata = sql.MetaData()
@@ -24,18 +24,13 @@ metadata.create_all(engine)
 
 connection = engine.connect()
 
-repo = git.init_repository("repo", False)
+repo = git.init_repository("repo", True)
 
 if 'refs/heads/master' not in repo.listall_references():
     author = git.Signature('wiki', 'danielmicay@gmail.com')
     tree = repo.TreeBuilder().write()
     repo.create_commit('refs/heads/master', author, author,
                        'initialize repository', tree, [])
-
-def generate_html_page(name):
-    publish_file(source_path=path.join("repo", name + ".rst"),
-                 destination_path=path.join("generated", name + ".html"),
-                 writer_name="html")
 
 # TODO: this should be a persistent key, generated with something like openssl
 KEY = b64encode(urandom(256))
@@ -63,12 +58,8 @@ def rst_page(filename):
 
 @get('/page/<filename>.html')
 def html_page(filename):
-    revision = request.query.get("revision")
-
-    if revision is None:
-        return static_file(filename + '.html', root="generated")
-    else:
-        return publish_string(get_page_revision(filename, revision), writer_name="html")
+    revision = request.query.get("revision", repo.head.oid)
+    return publish_string(get_page_revision(filename, revision), writer_name="html")
 
 @get('/log.json')
 def log():
@@ -94,10 +85,6 @@ def edit(filename, message, page, username):
     email, = connection.execute(sql.select([users.c.email],
                                            users.c.username == username)).first()
     signature = git.Signature(username, email)
-
-    with open(path.join("repo", filename + '.rst'), "w") as f:
-        f.write(page)
-    generate_html_page(filename)
 
     oid = repo.write(git.GIT_OBJ_BLOB, page)
     bld = repo.TreeBuilder()
