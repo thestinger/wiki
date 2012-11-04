@@ -9,8 +9,10 @@ from os import urandom
 import pygit2 as git
 import scrypt
 import sqlalchemy as sql
-from bottle import get, post, request, run, static_file
+from bottle import get, post, response, request, run, static_file
 from docutils.core import publish_file
+
+RST_MIME = "text/x-rst; charset=UTF-8"
 
 engine = sql.create_engine("sqlite:///wiki.sqlite3", echo=True)
 metadata = sql.MetaData()
@@ -54,11 +56,13 @@ def check_login_token(token):
 
 @get('/page/<filename>.rst')
 def page(filename):
+    response.content_type = RST_MIME
+
     revision = request.query.get("revision")
 
     if revision is None:
         return static_file(filename + '.rst', root="repo",
-                           mimetype="text/x-rst; charset=UTF-8")
+                           mimetype=RST_MIME)
     else:
         return repo[repo[revision].tree[filename + ".rst"].oid].data
 
