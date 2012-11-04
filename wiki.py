@@ -9,7 +9,7 @@ from os import urandom
 import pygit2 as git
 import scrypt
 import sqlalchemy as sql
-from bottle import get, post, response, request, run, static_file
+from bottle import get, post, response, request, run, static_file, template
 from docutils.core import publish_file, publish_string
 
 RST_MIME = "text/x-rst; charset=UTF-8"
@@ -93,15 +93,12 @@ def log():
                      "revision": c.hex}
                     for c in commits]}
 
-@post('/update/json/<filename>')
-def update(filename):
-    message, page, token = request.json["message"], request.json["page"], request.json["token"]
+@get('/edit/html/<filename>')
+def html_edit(filename):
+    # TODO: fill out the content and anti-CSRF token
+    return template("edit.html", content="", token="")
 
-    username = check_login_token(token)
-
-    if username is None:
-        return {"error": "invalid login token"}
-
+def edit(filename, message, page, username):
     email, = connection.execute(sql.select([users.c.email],
                                            users.c.username == username)).first()
     signature = git.Signature(username, email)
@@ -116,6 +113,31 @@ def update(filename):
     tree = bld.write()
     repo.create_commit('refs/heads/master', signature, signature, message,
                        tree, [repo.head.oid])
+
+@post('/edit/html/<filename>')
+def form_edit(filename):
+    message = request.forms["message"]
+    page = request.forms["page"]
+    token = request.get_cookie("token")
+
+    # TODO: check the form's anti-CSRF token
+
+    username = check_login_token(token)
+
+    edit(filename, message, page, username)
+
+@post('/edit/json/<filename>')
+def json_edit(filename):
+    message = request.json["message"]
+    page = request.json["page"]
+    token = request.json["token"]
+
+    username = check_login_token(token)
+
+    if username is None:
+        return {"error": "invalid login token"}
+
+    edit(filename, message, page, username)
 
 @get('/register.html')
 def html_register():

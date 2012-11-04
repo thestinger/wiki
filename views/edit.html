@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>edit</title>
+  </head>
+  <body>
+    <form method="post">
+      <textarea name="page">{{content}}</textarea>
+      <p><label for="message">Message</label></p>
+      <p><input name="message" id="message" required=""/></p>
+      <input type="hidden" name="token" value="{{token}}"/>
+      <p><input type="submit" value="Submit"/></p>
+    </form>
+  </body>
+</html>
