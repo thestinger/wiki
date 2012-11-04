@@ -10,7 +10,7 @@ import pygit2 as git
 import scrypt
 import sqlalchemy as sql
 from bottle import get, post, response, request, run, static_file
-from docutils.core import publish_file
+from docutils.core import publish_file, publish_string
 
 RST_MIME = "text/x-rst; charset=UTF-8"
 
@@ -54,6 +54,9 @@ def check_login_token(token):
     if hmac.compare_digest(mac, generate_mac(username)):
         return username
 
+def get_page_revision(filename, revision):
+    return repo[repo[revision].tree[filename + ".rst"].oid].data
+
 @get('/page/<filename>.rst')
 def page(filename):
     response.content_type = RST_MIME
@@ -64,11 +67,16 @@ def page(filename):
         return static_file(filename + '.rst', root="repo",
                            mimetype=RST_MIME)
     else:
-        return repo[repo[revision].tree[filename + ".rst"].oid].data
+        return get_page_revision(filename, revision)
 
 @get('/page/<filename>.html')
 def html_page(filename):
-    return static_file(filename + '.html', root="generated")
+    revision = request.query.get("revision")
+
+    if revision is None:
+        return static_file(filename + '.html', root="generated")
+    else:
+        return publish_string(get_page_revision(filename, revision), writer_name="html")
 
 @get('/log.json')
 def log():
