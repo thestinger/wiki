@@ -117,15 +117,15 @@ def update(filename):
     repo.create_commit('refs/heads/master', signature, signature, message,
                        tree, [repo.head.oid])
 
+@get('/register.html')
+def html_register():
+    return static_file("register.html", root="static")
+
 def register(username, password, email):
     hashed = scrypt.encrypt(b64encode(urandom(64)), password, maxtime=0.5)
     connection.execute(users.insert().values(username=username,
                                              email=email,
                                              password_hash=hashed))
-
-@get('/register.html')
-def html_register():
-    return static_file("register.html", root="static")
 
 @post('/register.html')
 def form_register():
@@ -150,15 +150,15 @@ def json_register():
 
     return {"token": make_login_token(username)}
 
+@get('/login.html')
+def html_login():
+    return static_file("login.html", root="static")
+
 def login(username, password):
     hashed, = connection.execute(sql.select([users.c.password_hash],
                                             users.c.username == username)).first()
     scrypt.decrypt(hashed, password, maxtime=0.5)
     return make_login_token(username)
-
-@get('/login.html')
-def html_login():
-    return static_file("login.html", root="static")
 
 @post('/login.html')
 def form_login():
