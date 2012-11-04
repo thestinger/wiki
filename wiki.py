@@ -54,8 +54,13 @@ def check_login_token(token):
 
 @get('/page/<filename>.rst')
 def page(filename):
-    return static_file(filename + '.rst', root="repo",
-                       mimetype="text/x-rst; charset=UTF-8")
+    revision = request.query.get("revision")
+
+    if revision is None:
+        return static_file(filename + '.rst', root="repo",
+                           mimetype="text/x-rst; charset=UTF-8")
+    else:
+        return repo[repo[revision].tree[filename + ".rst"].oid].data
 
 @get('/page/<filename>.html')
 def html_page(filename):
@@ -72,7 +77,8 @@ def log():
         pass
 
     return {"log": [{"message": c.message,
-                     "author": c.author.name}
+                     "author": c.author.name,
+                     "revision": c.hex}
                     for c in commits]}
 
 @post('/update/json/<filename>')
