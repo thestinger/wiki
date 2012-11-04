@@ -150,12 +150,36 @@ def json_register():
 
     return {"token": make_login_token(username)}
 
-@post('/login.json')
-def login():
-    username, password = request.json["username"], request.json["password"]
+def login(username, password):
     hashed, = connection.execute(sql.select([users.c.password_hash],
                                             users.c.username == username)).first()
     scrypt.decrypt(hashed, password, maxtime=0.5)
-    return {"token": make_login_token(username)}
+    return make_login_token(username)
+
+@get('/login.html')
+def html_login():
+    return static_file("login.html", root="static")
+
+@post('/login.html')
+def form_login():
+    username = request.forms["username"]
+    password = request.forms["password"]
+
+    response.set_cookie("token", login(username, password))
+
+@post('/login.json')
+def json_login():
+    try:
+        username = request.json["username"]
+        password = request.json["password"]
+    except KeyError as e:
+        return {"error": "missing {} key".format(e.args[0])}
+
+    try:
+        return {"token": login(username, password)}
+    except TypeError:
+        return {"error": "invalid username"}
+    except scrypt.error:
+        return {"error": "invalid password"}
 
 run(host='localhost', port=8080)
