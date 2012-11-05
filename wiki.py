@@ -44,6 +44,10 @@ def check_login_token(token):
 def get_page_revision(filename, revision):
     return repo[repo[revision].tree[filename + ".rst"].oid].data
 
+@get('/')
+def index():
+    return static_file("index.html", root="static")
+
 @get('/page/<filename>.rst')
 def rst_page(filename):
     response.content_type = "text/x-rst; charset=UTF-8"
