@@ -26,12 +26,6 @@ connection = engine.connect()
 
 repo = git.init_repository("repo", True)
 
-if 'refs/heads/master' not in repo.listall_references():
-    author = git.Signature('wiki', 'danielmicay@gmail.com')
-    tree = repo.TreeBuilder().write()
-    repo.create_commit('refs/heads/master', author, author,
-                       'initialize repository', tree, [])
-
 # TODO: this should be a persistent key, generated with something like openssl
 KEY = b64encode(urandom(256))
 
@@ -185,4 +179,14 @@ def json_login():
     except scrypt.error:
         return {"error": "invalid password"}
 
-run(host='localhost', port=8080)
+def main():
+    if 'refs/heads/master' not in repo.listall_references():
+        author = git.Signature('wiki', 'danielmicay@gmail.com')
+        tree = repo.TreeBuilder().write()
+        repo.create_commit('refs/heads/master', author, author,
+                           'initialize repository', tree, [])
+
+    run(host='localhost', port=8080)
+
+if __name__ == '__main__':
+    main()
