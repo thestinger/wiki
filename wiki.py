@@ -9,7 +9,7 @@ from os import urandom
 import pygit2 as git
 import scrypt
 import sqlalchemy as sql
-from bottle import get, post, response, request, run, static_file, template
+from bottle import get, post, response, request, run, static_file, view
 from docutils.core import publish_string
 
 engine = sql.create_engine("sqlite:///wiki.sqlite3", echo=True)
@@ -77,9 +77,11 @@ def log():
                     for c in commits]}
 
 @get('/edit/html/<filename>')
+@view("edit.html")
 def html_edit(filename):
-    # TODO: fill out the content and anti-CSRF token
-    return template("edit.html", content="", token="")
+    # TODO: set an anti-CSRF token
+    return dict(content=get_page_revision(filename, repo.head.oid),
+                token="")
 
 def edit(filename, message, page, username):
     email, = connection.execute(sql.select([users.c.email],
