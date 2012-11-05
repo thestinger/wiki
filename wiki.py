@@ -19,7 +19,8 @@ users = sql.Table("users", metadata,
                   sql.Column("email", sql.String, nullable = False),
                   sql.Column("email_verified", sql.Boolean, nullable = False,
                              default = False),
-                  sql.Column("password_hash", sql.Binary, nullable = False))
+                  sql.Column("password_hash", sql.Binary, nullable = False),
+                  sql.Column("password_salt", sql.Binary, nullable = False))
 metadata.create_all(engine)
 
 connection = engine.connect()
@@ -132,10 +133,12 @@ def html_register():
     return static_file("register.html", root="static")
 
 def register(username, password, email):
-    hashed = scrypt.encrypt(b64encode(urandom(64)), password, maxtime=0.5)
+    salt = urandom(64)
+    hashed = scrypt.hash(password, salt)
     connection.execute(users.insert().values(username=username,
                                              email=email,
-                                             password_hash=hashed))
+                                             password_hash=hashed,
+                                             password_salt=salt))
 
 @post('/register.html')
 def form_register():
@@ -165,9 +168,13 @@ def html_login():
     return static_file("login.html", root="static")
 
 def login(username, password):
-    hashed, = connection.execute(sql.select([users.c.password_hash],
-                                            users.c.username == username)).first()
-    scrypt.decrypt(hashed, password, maxtime=0.5)
+    select = sql.select([users.c.password_hash, users.c.password_salt],
+                        users.c.username == username)
+    hashed, salt = connection.execute(select).first()
+
+    if not hmac.compare_digest(hashed, scrypt.hash(password, salt)):
+        raise ValueError("invalid password")
+
     return make_login_token(username)
 
 @post('/login.html')
@@ -189,7 +196,7 @@ def json_login():
         return {"token": login(username, password)}
     except TypeError:
         return {"error": "invalid username"}
-    except scrypt.error:
+    except ValueError:
         return {"error": "invalid password"}
 
 def main():
