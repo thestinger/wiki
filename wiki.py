@@ -28,7 +28,7 @@ connection = engine.connect()
 repo = git.init_repository("repo", True)
 
 # TODO: this should be a persistent key, generated with something like openssl
-KEY = b64encode(urandom(256))
+KEY = urandom(256)
 
 def generate_mac(s):
     return hmac.new(KEY, s.encode(), sha256).hexdigest()
