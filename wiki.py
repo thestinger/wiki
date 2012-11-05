@@ -73,9 +73,12 @@ def log():
 @get('/edit/html/<filename>')
 @view("edit.html")
 def html_edit(filename):
-    # TODO: set an anti-CSRF token
+    token = request.get_cookie("token")
+    username = check_login_token(token)
+    form_token = make_login_token(username + "|edit")
+
     return dict(content=get_page_revision(filename, repo.head.oid),
-                token="")
+                token=form_token)
 
 def edit(filename, message, page, username):
     email, = connection.execute(sql.select([users.c.email],
@@ -93,11 +96,13 @@ def edit(filename, message, page, username):
 def form_edit(filename):
     message = request.forms["message"]
     page = request.forms["page"]
+    form_token = request.forms["token"]
     token = request.get_cookie("token")
 
-    # TODO: check the form's anti-CSRF token
-
     username = check_login_token(token)
+
+    if check_login_token(form_token) != username + "|edit":
+        return
 
     edit(filename, message, page, username)
 
