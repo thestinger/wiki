@@ -77,8 +77,12 @@ def html_edit(filename):
     username = check_login_token(token)
     form_token = make_login_token(username + "|edit")
 
-    return dict(content=get_page_revision(filename, repo.head.oid),
-                token=form_token)
+    try:
+        blob = get_page_revision(filename, repo.head.oid)
+    except KeyError: # filename.rst not in tree
+        blob = ""
+
+    return dict(content=blob, token=form_token)
 
 def edit(filename, message, page, username):
     email, = connection.execute(sql.select([users.c.email],
