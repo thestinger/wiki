@@ -217,7 +217,7 @@ def main():
         repo.create_commit('refs/heads/master', author, author,
                            'initialize repository', tree, [])
 
-    run(host='localhost', port=8080)
+    run(host='localhost', port=8080, reloader=True)
 
 if __name__ == '__main__':
     main()
