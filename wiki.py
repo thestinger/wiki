@@ -8,7 +8,7 @@ from os import urandom
 import pygit2 as git
 import scrypt
 import sqlalchemy as sql
-from bottle import get, post, response, request, run, static_file, view
+from bottle import get, post, redirect, response, request, run, static_file, view
 from docutils.core import publish_string
 
 engine = sql.create_engine("sqlite:///wiki.sqlite3", echo=True)
@@ -148,6 +148,7 @@ def form_register():
     register(username, password, email)
 
     response.set_cookie("token", make_login_token(username))
+    redirect("/")
 
 @post('/register.json')
 def json_register():
@@ -182,6 +183,7 @@ def form_login():
     password = request.forms["password"]
 
     response.set_cookie("token", login(username, password))
+    redirect("/")
 
 @post('/login.json')
 def json_login():
