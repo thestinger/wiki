@@ -7,7 +7,12 @@
   <body>
     <ul>
 %for change in log:
-      <li>{{change["time"]}} {{change["author"]}} {{change["message"].split("\n", 1)[0]}} {{change["revision"]}}</li>
+      <li>
+        <time>{{change["time"]}}</time>
+        {{change["author"]}}
+        {{change["message"].split("\n", 1)[0]}}
+        {{change["revision"]}}
+      </li>
 %end
     </ul>
   </body>
