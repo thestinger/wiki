@@ -169,7 +169,10 @@ def json_register():
     except KeyError as e:
         return {"error": "missing {} key".format(e.args[0])}
 
-    register(username, password, email)
+    try:
+        register(username, password, email)
+    except sql.exc.IntegrityError:
+        return {"error": "username already registered"}
 
     return {"token": make_login_token(username)}
 
