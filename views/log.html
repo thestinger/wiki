@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>log</title>
+  </head>
+  <body>
+    <ul>
+%for change in log:
+      <li>{{change["author"]}} {{change["message"]}} {{change["revision"]}}</li>
+%end
+    </ul>
+  </body>
+</html>

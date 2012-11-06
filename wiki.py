@@ -59,7 +59,6 @@ def html_page(filename):
     revision = request.query.get("revision", repo.head.oid)
     return publish_string(get_page_revision(filename, revision), writer_name="html")
 
-@get('/log.json')
 def log():
     commits = repo.walk(repo.head.oid, git.GIT_SORT_TIME)
 
@@ -73,6 +72,15 @@ def log():
                      "author": c.author.name,
                      "revision": c.hex}
                     for c in commits]}
+
+@get('/log.html')
+@view('log.html')
+def html_log():
+    return log()
+
+@get('/log.json')
+def json_log():
+    return log()
 
 @get('/edit/html/<filename>')
 @view("edit.html")
