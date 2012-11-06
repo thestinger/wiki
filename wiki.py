@@ -34,11 +34,11 @@ def generate_mac(s):
     return hmac.new(KEY, s.encode(), sha256).hexdigest()
 
 def make_login_token(username):
-    return "|".join((generate_mac(username), username))
+    return "-".join((generate_mac(username), username))
 
 def check_login_token(token):
     "Return the username if the token is valid, otherwise None."
-    mac, username = token.split('|', 1)
+    mac, username = token.split('-', 1)
     if hmac.compare_digest(mac, generate_mac(username)):
         return username
 
@@ -89,7 +89,7 @@ def json_log():
 def html_edit(filename):
     token = request.get_cookie("token")
     username = check_login_token(token)
-    form_token = make_login_token(username + "|edit")
+    form_token = make_login_token(username + "-edit")
 
     try:
         blob = get_page_revision(filename, repo.head.oid)
@@ -119,7 +119,7 @@ def form_edit(filename):
 
     username = check_login_token(token)
 
-    if check_login_token(form_token) != username + "|edit":
+    if check_login_token(form_token) != username + "-edit":
         return
 
     edit(filename, message, page, username)
