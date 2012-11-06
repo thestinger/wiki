@@ -2,6 +2,7 @@
 
 import hmac
 import os.path as path
+from datetime import datetime
 from hashlib import sha256
 from os import urandom
 
@@ -70,6 +71,7 @@ def log():
 
     return {"log": [{"message": c.message,
                      "author": c.author.name,
+                     "time": datetime.fromtimestamp(c.author.time).isoformat() + "Z",
                      "revision": c.hex}
                     for c in commits]}
 
