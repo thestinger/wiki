@@ -2,7 +2,6 @@
 
 import hmac
 import os.path as path
-from base64 import b64encode
 from hashlib import sha256
 from os import urandom
 
