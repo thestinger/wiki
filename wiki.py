@@ -14,6 +14,7 @@ from docutils.core import publish_string
 
 engine = sql.create_engine("sqlite:///wiki.sqlite3", echo=True)
 metadata = sql.MetaData()
+
 users = sql.Table("users", metadata,
                   sql.Column("username", sql.String, primary_key = True),
                   sql.Column("email", sql.String, nullable = False),
@@ -21,6 +22,12 @@ users = sql.Table("users", metadata,
                              default = False),
                   sql.Column("password_hash", sql.Binary, nullable = False),
                   sql.Column("password_salt", sql.Binary, nullable = False))
+
+generated = sql.Table("generated", metadata,
+                      sql.Column("name", sql.String, primary_key = True),
+                      sql.Column("revision", sql.String, primary_key = True),
+                      sql.Column("content", sql.String, nullable = False))
+
 metadata.create_all(engine)
 
 connection = engine.connect()
@@ -50,6 +57,21 @@ def check_login_token(token):
 def get_page_revision(filename, revision):
     return repo[repo[revision].tree[filename + ".rst"].oid].data
 
+def get_html_revision(name, revision):
+    s = sql.select([generated.c.content],
+                   (generated.c.name == name) & (generated.c.revision == revision))
+    result = connection.execute(s).first()
+
+    if result is None:
+        content = publish_string(get_page_revision(name, revision), writer_name="html")
+        connection.execute(generated.insert().values(name=name,
+                                                     revision=revision,
+                                                     content=content))
+    else:
+        content = result[0]
+
+    return content
+
 @get('/')
 def index():
     return static_file("index.html", root="static")
@@ -57,13 +79,13 @@ def index():
 @get('/page/<filename>.rst')
 def rst_page(filename):
     response.content_type = "text/x-rst; charset=UTF-8"
-    revision = request.query.get("revision", repo.head.oid)
+    revision = request.query.get("revision", repo.head.hex)
     return get_page_revision(filename, revision)
 
 @get('/page/<filename>.html')
 def html_page(filename):
-    revision = request.query.get("revision", repo.head.oid)
-    return publish_string(get_page_revision(filename, revision), writer_name="html")
+    revision = request.query.get("revision", repo.head.hex)
+    return get_html_revision(filename, revision)
 
 def log():
     commits = repo.walk(repo.head.oid, git.GIT_SORT_TIME)
