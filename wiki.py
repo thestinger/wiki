@@ -67,10 +67,9 @@ def get_html_revision(name, revision):
         connection.execute(generated.insert().values(name=name,
                                                      revision=revision,
                                                      content=content))
-    else:
-        content = result[0]
+        return content
 
-    return content
+    return result[0]
 
 @get('/')
 def index():
