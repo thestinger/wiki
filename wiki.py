@@ -54,8 +54,8 @@ def check_login_token(token):
     if hmac.compare_digest(mac, generate_mac(username)):
         return username
 
-def get_page_revision(filename, revision):
-    return repo[repo[revision].tree[filename + ".rst"].oid].data
+def get_page_revision(name, revision):
+    return repo[repo[revision].tree[name + ".rst"].oid].data
 
 def get_html_revision(name, revision):
     s = sql.select([generated.c.content],
@@ -124,14 +124,14 @@ def html_edit(filename):
 
     return dict(content=blob, token=form_token)
 
-def edit(filename, message, page, username):
+def edit(name, message, page, username):
     email, = connection.execute(sql.select([users.c.email],
                                            users.c.username == username)).first()
     signature = git.Signature(username, email)
 
     oid = repo.write(git.GIT_OBJ_BLOB, page)
     bld = repo.TreeBuilder()
-    bld.insert(filename + '.rst', oid, 100644)
+    bld.insert(name + '.rst', oid, 100644)
     tree = bld.write()
     repo.create_commit('refs/heads/master', signature, signature, message,
                        tree, [repo.head.oid])
