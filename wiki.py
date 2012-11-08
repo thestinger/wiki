@@ -63,7 +63,10 @@ def get_html_revision(name, revision):
     result = connection.execute(s).first()
 
     if result is None:
-        content = publish_string(get_page_revision(name, revision), writer_name="html")
+        settings = {"stylesheet_path": "/static/html4css1.css,/static/main.css",
+                    "embed_stylesheet": False}
+        content = publish_string(get_page_revision(name, revision), writer_name="html",
+                                 settings_overrides=settings)
         connection.execute(generated.insert().values(name=name,
                                                      revision=revision,
                                                      content=content))
@@ -85,6 +88,10 @@ def rst_page(filename):
 def html_page(filename):
     revision = request.query.get("revision", repo.head.hex)
     return get_html_revision(filename, revision)
+
+@get('/static/<filename>.css')
+def css(filename):
+    return static_file(filename + ".css", root="static")
 
 def log():
     commits = repo.walk(repo.head.oid, git.GIT_SORT_TIME)
