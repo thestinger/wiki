@@ -2,6 +2,10 @@ body {
   background: #fdf6e3;
 }
 
+.code {
+  background: #eee8d5;
+}
+
 /* Pygments */
 
 .hll { background-color: #ffffcc }
