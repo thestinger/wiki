@@ -38,12 +38,12 @@ body {
 .m { color: #2aa198; font-weight: bold } /* Literal.Number */
 .s { color: #2aa198 } /* Literal.String */
 .na { color: #268bd2 } /* Name.Attribute */
-.nb { color: #cb4b16 } /* Name.Builtin */
+.nb { color: #268bd2 } /* Name.Builtin */
 .nc { color: #cb4b16 } /* Name.Class */
 .no { color: #268bd2 } /* Name.Constant */
 .nd { color: #268bd2 } /* Name.Decorator */
 .ni { color: #268bd2 } /* Name.Entity */
-.ne { color: #268bd2 } /* Name.Exception */
+.ne { color: #b58900 } /* Name.Exception */
 .nf { color: #268bd2 } /* Name.Function */
 .nl { color: #268bd2 } /* Name.Label */
 .nn { color: #268bd2 } /* Name.Namespace */
@@ -68,7 +68,7 @@ body {
 .sr { color: #2aa198 } /* Literal.String.Regex */
 .s1 { color: #2aa198 } /* Literal.String.Single */
 .ss { color: #2aa198 } /* Literal.String.Symbol */
-.bp { color: #cb4b16 } /* Name.Builtin.Pseudo */
+.bp { color: #268bd2 } /* Name.Builtin.Pseudo */
 .vc { color: #268bd2 } /* Name.Variable.Class */
 .vg { color: #268bd2 } /* Name.Variable.Global */
 .vi { color: #268bd2 } /* Name.Variable.Instance */
