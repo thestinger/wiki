@@ -7,8 +7,7 @@ body {
   background: #eee8d5;
 }
 
-/* Pygments */
-
+/* Pygments {{{ */
 .hll { background-color: #ffffcc }
 .c { color: #93a1a1; font-style: italic } /* Comment */
 .g { color: #d33682 } /* Generic */
@@ -74,3 +73,4 @@ body {
 .vg { color: #268bd2 } /* Name.Variable.Global */
 .vi { color: #268bd2 } /* Name.Variable.Instance */
 .il { color: #2aa198; font-weight: bold } /* Literal.Number.Integer.Long */
+/* }}} */
