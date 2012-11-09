@@ -30,7 +30,7 @@ body {
 .gt { color: #d33682 } /* Generic.Traceback */
 .kc { color: #859900; font-weight: bold } /* Keyword.Constant */
 .kd { color: #859900 } /* Keyword.Declaration */
-.kn { color: #dc322f; font-weight: bold } /* Keyword.Namespace */
+.kn { color: #cb4b16 } /* Keyword.Namespace */
 .kp { color: #859900 } /* Keyword.Pseudo */
 .kr { color: #859900 } /* Keyword.Reserved */
 .kt { color: #859900; font-weight: bold } /* Keyword.Type */
