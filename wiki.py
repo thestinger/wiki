@@ -137,7 +137,7 @@ def edit(name, message, page, username):
     signature = git.Signature(username, email)
 
     oid = repo.write(git.GIT_OBJ_BLOB, page)
-    bld = repo.TreeBuilder()
+    bld = repo.TreeBuilder(repo.head.tree)
     bld.insert(name + '.rst', oid, 100644)
     tree = bld.write()
     repo.create_commit('refs/heads/master', signature, signature, message,
