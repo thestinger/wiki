@@ -95,6 +95,7 @@ def css(filename):
 
 def page_log(page, commits):
     # TODO: currently ignores the possibility of moved files
+    # TODO: does not consider removed/recreated files
     for commit in commits:
         tree = commit.tree
         if page not in tree:
