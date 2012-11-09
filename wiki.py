@@ -93,12 +93,25 @@ def html_page(filename):
 def css(filename):
     return static_file(filename + ".css", root="static")
 
+def page_log(page, commits):
+    # TODO: currently ignores the possibility of moved files
+    for commit in commits:
+        tree = commit.tree
+        if page not in tree:
+            continue
+        parent_tree = commit.parents[0].tree
+
+        diff = parent_tree.diff(tree)
+        files = diff.changes["files"]
+        if any(x[0] == page for x in files):
+            yield commit
+
 def log():
     commits = repo.walk(repo.head.oid, git.GIT_SORT_TIME)
 
     try:
         page = request.query["page"] + ".rst"
-        commits = filter(lambda c: page in c.tree, commits)
+        commits = page_log(page, commits)
     except KeyError:
         pass
 
