@@ -248,10 +248,6 @@ pre.code .ln { /* line numbers */
   color: grey;
 }
 
-.code {
-  background-color: #eeeeee
-}
-
 span.classifier {
   font-family: sans-serif ;
   font-style: oblique }
