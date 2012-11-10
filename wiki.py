@@ -78,6 +78,10 @@ def get_html_revision(name, revision):
 def index():
     return static_file("index.html", root="static")
 
+@get('/list.json')
+def json_list():
+    return {"pages": [p.name[:-4] for p in repo.head.tree]}
+
 @get('/page/<filename>.rst')
 def rst_page(filename):
     response.content_type = "text/x-rst; charset=UTF-8"
