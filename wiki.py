@@ -143,7 +143,7 @@ def html_edit(filename):
     except KeyError: # filename.rst not in tree
         blob = ""
 
-    return dict(content=blob, token=form_token)
+    return dict(content=blob, name=filename, token=form_token)
 
 def edit(name, message, page, username):
     email, = connection.execute(sql.select([users.c.email],
