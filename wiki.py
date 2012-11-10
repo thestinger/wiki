@@ -78,9 +78,17 @@ def get_html_revision(name, revision):
 def index():
     return static_file("index.html", root="static")
 
-@get('/list.json')
-def json_list():
+def list_pages():
     return {"pages": [p.name[:-4] for p in repo.head.tree]}
+
+@get('/list.html')
+@view('list.html')
+def html_list_pages():
+    return list_pages()
+
+@get('/list.json')
+def json_list_pages():
+    return list_pages()
 
 @get('/page/<filename>.rst')
 def rst_page(filename):

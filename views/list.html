@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>log</title>
+    <link rel="stylesheet" href="/static/main.css"/>
+  </head>
+  <body>
+    <ul>
+%for page in pages:
+      <li><a href="/page/{{page}}.html">{{page}}</a></li>
+%end
+    </ul>
+  </body>
+</html>
