@@ -157,6 +157,14 @@ def edit(name, message, page, username):
     repo.create_commit('refs/heads/master', signature, signature, message,
                        tree, [repo.head.oid])
 
+def is_changed(name, content):
+    filename = name + '.rst'
+
+    if filename not in repo.head.tree:
+        return True
+
+    return content != get_page_revision(name, repo.head.oid).decode()
+
 @post('/edit/html/<filename>')
 def form_edit(filename):
     message = request.forms["message"]
@@ -169,6 +177,9 @@ def form_edit(filename):
     if check_login_token(form_token) != username + "-edit":
         return
 
+    if not is_changed(filename, page):
+        redirect(request.url)
+
     edit(filename, message, page, username)
 
     redirect('/page/{}.html'.format(filename))
@@ -180,6 +191,9 @@ def json_edit(filename):
     token = request.json["token"]
 
     username = check_login_token(token)
+
+    if not is_changed(filename, page):
+        return {"error": "an edit must make changes"}
 
     if username is None:
         return {"error": "invalid login token"}
