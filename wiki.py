@@ -14,7 +14,7 @@ import sqlalchemy as sql
 from bottle import get, post, redirect, response, request, run, static_file, view
 from docutils.core import publish_string
 
-engine = sql.create_engine("sqlite:///wiki.sqlite3", echo=True)
+engine = sql.create_engine("sqlite:///wiki.sqlite3")
 metadata = sql.MetaData()
 
 users = sql.Table("users", metadata,
@@ -31,8 +31,6 @@ generated = sql.Table("generated", metadata,
                       sql.Column("content", sql.String, nullable = False))
 
 metadata.create_all(engine)
-
-connection = engine.connect()
 
 repo = git.init_repository("repo", True)
 
@@ -60,21 +58,22 @@ def get_page_revision(name, revision):
     return repo[repo[revision].tree[name + ".rst"].oid].data
 
 def get_html_revision(name, revision):
-    s = sql.select([generated.c.content],
-                   (generated.c.name == name) & (generated.c.revision == revision))
-    result = connection.execute(s).first()
+    with engine.connect() as connection:
+        s = sql.select([generated.c.content],
+                       (generated.c.name == name) & (generated.c.revision == revision))
+        result = connection.execute(s).first()
 
-    if result is None:
-        settings = {"stylesheet_path": "/static/html4css1.css,/static/main.css",
-                    "embed_stylesheet": False}
-        content = publish_string(get_page_revision(name, revision), writer_name="html",
-                                 settings_overrides=settings)
-        connection.execute(generated.insert().values(name=name,
-                                                     revision=revision,
-                                                     content=content))
-        return content
+        if result is None:
+            settings = {"stylesheet_path": "/static/html4css1.css,/static/main.css",
+                        "embed_stylesheet": False}
+            content = publish_string(get_page_revision(name, revision), writer_name="html",
+                                     settings_overrides=settings)
+            connection.execute(generated.insert().values(name=name,
+                                                         revision=revision,
+                                                         content=content))
+            return content
 
-    return result[0]
+        return result[0]
 
 @get('/')
 def index():
@@ -160,8 +159,8 @@ def html_edit(filename):
     return dict(content=blob, name=filename, token=form_token)
 
 def edit(name, message, page, username):
-    email, = connection.execute(sql.select([users.c.email],
-                                           users.c.username == username)).first()
+    email, = engine.execute(sql.select([users.c.email],
+                                       users.c.username == username)).first()
     signature = git.Signature(username, email)
 
     oid = repo.write(git.GIT_OBJ_BLOB, page)
@@ -250,10 +249,10 @@ def html_register():
 def register(username, password, email):
     salt = urandom(64)
     hashed = scrypt.hash(password, salt)
-    connection.execute(users.insert().values(username=username,
-                                             email=email,
-                                             password_hash=hashed,
-                                             password_salt=salt))
+    engine.execute(users.insert().values(username=username,
+                                         email=email,
+                                         password_hash=hashed,
+                                         password_salt=salt))
 
 @post('/register.html')
 def form_register():
@@ -289,7 +288,7 @@ def html_login():
 def login(username, password):
     select = sql.select([users.c.password_hash, users.c.password_salt],
                         users.c.username == username)
-    hashed, salt = connection.execute(select).first()
+    hashed, salt = engine.execute(select).first()
 
     if not hmac.compare_digest(hashed, scrypt.hash(password, salt)):
         raise ValueError("invalid password")
