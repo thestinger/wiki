@@ -2,9 +2,10 @@
 
 import hmac
 import os.path as path
+import subprocess
 from datetime import datetime
 from hashlib import sha256
-from os import urandom
+from os import mkdir, urandom
 
 import pygit2 as git
 import scrypt
@@ -212,6 +213,33 @@ def json_edit(filename):
 
     edit(filename, message, page, username)
 
+@post('/<revision>/revert.json')
+def json_revert(revision):
+    target = repo[revision]
+    token = request.json["token"]
+
+    username = check_login_token(token)
+
+    tree = target.tree
+    parent_tree = target.parents[0].tree
+
+    diff = parent_tree.diff(tree)
+
+    filename = diff.changes["files"][0][0]
+    name = filename[:-4]
+
+    current = get_page_revision(name, repo.head.hex)
+
+    with open(path.join("tmp", filename), "wb") as f:
+        f.write(current)
+
+    with subprocess.Popen(["patch", "-Rtd", "tmp", "-o", "-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE) as p:
+        p.stdin.write(diff.patch)
+        p.stdin.close()
+        result = p.stdout.read()
+
+    edit(name, 'Revert "{}"'.format(target.message.split("\n", 1)[0]), result, username)
+
 @get('/register.html')
 def html_register():
     return static_file("register.html", root="static")
@@ -289,6 +317,11 @@ def json_login():
         return {"error": "invalid password"}
 
 def main():
+    try:
+        mkdir('tmp')
+    except FileExistsError:
+        pass
+
     if 'refs/heads/master' not in repo.listall_references():
         author = git.Signature('wiki', 'danielmicay@gmail.com')
         tree = repo.TreeBuilder().write()
