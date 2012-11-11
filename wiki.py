@@ -203,11 +203,10 @@ def json_edit(filename):
     page = request.json["page"]
     token = request.json["token"]
 
-    username = check_login_token(token)
-
     if not is_changed(filename, page):
         return {"error": "an edit must make changes"}
 
+    username = check_login_token(token)
     if username is None:
         return {"error": "invalid login token"}
 
@@ -219,6 +218,8 @@ def json_revert(revision):
     token = request.json["token"]
 
     username = check_login_token(token)
+    if username is None:
+        return {"error": "invalid login token"}
 
     tree = target.tree
     parent_tree = target.parents[0].tree
