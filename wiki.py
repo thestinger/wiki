@@ -4,8 +4,9 @@ import hmac
 import os.path as path
 from datetime import datetime
 from hashlib import sha256
-from os import mkdir, urandom
+from os import urandom
 from subprocess import Popen, PIPE
+from tempfile import TemporaryDirectory
 
 import pygit2 as git
 import scrypt
@@ -231,13 +232,14 @@ def json_revert(revision):
 
     current = get_page_revision(name, repo.head.hex)
 
-    with open(path.join("tmp", filename), "wb") as f:
-        f.write(current)
+    with TemporaryDirectory() as tmp:
+        with open(path.join(tmp, filename), "wb") as f:
+            f.write(current)
 
-    with Popen(["patch", "-Rtd", "tmp", "-o", "-"], stdin=PIPE, stdout=PIPE) as p:
-        p.stdin.write(diff.patch)
-        p.stdin.close()
-        result = p.stdout.read()
+        with Popen(["patch", "-Rtd", tmp, "-o", "-"], stdin=PIPE, stdout=PIPE) as p:
+            p.stdin.write(diff.patch)
+            p.stdin.close()
+            result = p.stdout.read()
 
     edit(name, 'Revert "{}"'.format(target.message.split("\n", 1)[0]), result, username)
 
@@ -318,11 +320,6 @@ def json_login():
         return {"error": "invalid password"}
 
 def main():
-    try:
-        mkdir('tmp')
-    except FileExistsError:
-        pass
-
     if 'refs/heads/master' not in repo.listall_references():
         author = git.Signature('wiki', 'danielmicay@gmail.com')
         tree = repo.TreeBuilder().write()
