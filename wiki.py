@@ -235,7 +235,7 @@ def json_revert(revision):
         with open(path.join(tmp, filename), "wb") as f:
             f.write(current)
 
-        with Popen(["patch", "-Rtd", tmp, "-o", "-"], stdin=PIPE, stdout=PIPE) as p:
+        with Popen(["patch", "-Rfd", tmp, "-o", "-"], stdin=PIPE, stdout=PIPE) as p:
             result, _ = p.communicate(diff.patch)
 
     edit(name, 'Revert "{}"'.format(target.message.split("\n", 1)[0]), result, username)
