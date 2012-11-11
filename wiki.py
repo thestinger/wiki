@@ -2,10 +2,10 @@
 
 import hmac
 import os.path as path
-import subprocess
 from datetime import datetime
 from hashlib import sha256
 from os import mkdir, urandom
+from subprocess import Popen, PIPE
 
 import pygit2 as git
 import scrypt
@@ -233,7 +233,7 @@ def json_revert(revision):
     with open(path.join("tmp", filename), "wb") as f:
         f.write(current)
 
-    with subprocess.Popen(["patch", "-Rtd", "tmp", "-o", "-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE) as p:
+    with Popen(["patch", "-Rtd", "tmp", "-o", "-"], stdin=PIPE, stdout=PIPE) as p:
         p.stdin.write(diff.patch)
         p.stdin.close()
         result = p.stdout.read()
