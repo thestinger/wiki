@@ -3,6 +3,10 @@ body {
   color: #657b83;
 }
 
+table {
+  border-collapse: collapse;
+}
+
 .code {
   background: #eee8d5;
 }
