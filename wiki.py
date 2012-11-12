@@ -45,14 +45,14 @@ except FileNotFoundError:
 def generate_mac(s):
     return hmac.new(KEY, s.encode(), sha256).hexdigest()
 
-def make_login_token(username):
-    return "-".join((generate_mac(username), username))
+def make_token(value):
+    return "-".join((generate_mac(value), value))
 
-def check_login_token(token):
-    "Return the username if the token is valid, otherwise None."
-    mac, username = token.split('-', 1)
-    if hmac.compare_digest(mac, generate_mac(username)):
-        return username
+def check_token(token):
+    "Return the value if the token is valid, otherwise None."
+    mac, value = token.split('-', 1)
+    if hmac.compare_digest(mac, generate_mac(value)):
+        return value
 
 def get_page_revision(name, revision):
     return repo[repo[revision].tree[name + ".rst"].oid].data
@@ -66,7 +66,8 @@ def get_html_revision(name, revision):
         if result is None:
             settings = {"stylesheet_path": "/static/html4css1.css,/static/main.css",
                         "embed_stylesheet": False}
-            content = publish_string(get_page_revision(name, revision), writer_name="html",
+            content = publish_string(get_page_revision(name, revision),
+                                     writer_name="html",
                                      settings_overrides=settings)
             connection.execute(generated.insert().values(name=name,
                                                          revision=revision,
@@ -148,8 +149,8 @@ def json_log():
 @view("edit.html")
 def html_edit(filename):
     token = request.get_cookie("token")
-    username = check_login_token(token)
-    form_token = make_login_token(username + "-edit")
+    username = check_token(token)
+    form_token = make_token(username + "-edit")
 
     try:
         blob = get_page_revision(filename, repo.head.oid)
@@ -185,9 +186,9 @@ def form_edit(filename):
     form_token = request.forms["token"]
     token = request.get_cookie("token")
 
-    username = check_login_token(token)
+    username = check_token(token)
 
-    if check_login_token(form_token) != username + "-edit":
+    if check_token(form_token) != username + "-edit":
         return
 
     if not is_changed(filename, page):
@@ -206,7 +207,7 @@ def json_edit(filename):
     if not is_changed(filename, page):
         return {"error": "an edit must make changes"}
 
-    username = check_login_token(token)
+    username = check_token(token)
     if username is None:
         return {"error": "invalid login token"}
 
@@ -217,7 +218,7 @@ def json_revert(revision):
     target = repo[revision]
     token = request.json["token"]
 
-    username = check_login_token(token)
+    username = check_token(token)
     if username is None:
         return {"error": "invalid login token"}
 
@@ -263,7 +264,7 @@ def form_register():
 
     register(username, password, email)
 
-    response.set_cookie("token", make_login_token(username))
+    response.set_cookie("token", make_token(username))
     redirect("/")
 
 @post('/register.json')
@@ -280,7 +281,7 @@ def json_register():
     except sql.exc.IntegrityError:
         return {"error": "username already registered"}
 
-    return {"token": make_login_token(username)}
+    return {"token": make_token(username)}
 
 @get('/login.html')
 def html_login():
@@ -294,7 +295,7 @@ def login(username, password):
     if not hmac.compare_digest(hashed, scrypt.hash(password, salt)):
         raise ValueError("invalid password")
 
-    return make_login_token(username)
+    return make_token(username)
 
 @post('/login.html')
 def form_login():
