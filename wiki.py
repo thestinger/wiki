@@ -16,6 +16,7 @@ from docutils.core import publish_string
 
 engine = sql.create_engine("sqlite:///wiki.sqlite3")
 metadata = sql.MetaData()
+metadata.bind = engine
 
 users = sql.Table("users", metadata,
                   sql.Column("username", sql.String, primary_key = True),
@@ -31,6 +32,9 @@ generated = sql.Table("generated", metadata,
                       sql.Column("content", sql.String, nullable = False))
 
 metadata.create_all(engine)
+
+engine.execute('CREATE VIRTUAL TABLE IF NOT EXISTS corpus USING fts4(name, page)')
+corpus = sql.Table("corpus", metadata, autoload=True)
 
 repo = git.init_repository("repo", True)
 
@@ -170,6 +174,10 @@ def edit(name, message, page, username):
     tree = bld.write()
     repo.create_commit('refs/heads/master', signature, signature, message,
                        tree, [repo.head.oid])
+
+    with engine.connect() as c:
+        c.execute(corpus.delete().where(corpus.c.name == name))
+        c.execute(corpus.insert().values(name=name, page=page))
 
 def is_changed(name, content):
     filename = name + '.rst'
