@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>log</title>
+    <link rel="stylesheet" href="/static/main.css"/>
+  </head>
+  <body>
+    <ul>
+%for match in matches:
+      <li><a href="/page/{{match}}.html">{{match}}</a></li>
+%end
+    </ul>
+  </body>
+</html>

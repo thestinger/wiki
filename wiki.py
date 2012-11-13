@@ -111,6 +111,20 @@ def html_page(filename):
 def css(filename):
     return static_file(filename + ".css", root="static")
 
+def search():
+    query = request.query["query"]
+    result = engine.execute("select name from corpus where corpus match ?", (query,))
+    return {"matches": [name for name, in result]}
+
+@get('/search.html')
+@view('search.html')
+def html_search():
+    return search()
+
+@get('/search.json')
+def json_search():
+    return search()
+
 def page_log(page, commits):
     # TODO: currently ignores the possibility of moved files
     # TODO: does not consider removed/recreated files
