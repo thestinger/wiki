@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 import hmac
-import os.path as path
 from datetime import datetime
 from hashlib import sha256
-from os import urandom
+from os import path, urandom
 from subprocess import Popen, PIPE
 from tempfile import TemporaryDirectory
 
