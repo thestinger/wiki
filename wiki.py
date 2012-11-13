@@ -11,7 +11,7 @@ from tempfile import TemporaryDirectory
 import pygit2 as git
 import scrypt
 import sqlalchemy as sql
-from bottle import get, post, redirect, response, request, run, static_file, view
+from bottle import app, get, post, redirect, response, request, run, static_file, view
 from docutils.core import publish_string
 
 engine = sql.create_engine("sqlite:///wiki.sqlite3")
@@ -351,7 +351,9 @@ def main():
         repo.create_commit('refs/heads/master', author, author,
                            'initialize repository', tree, [])
 
-    run(host='localhost', port=8080)
+main()
 
 if __name__ == '__main__':
-    main()
+    run(host='localhost', port=8080)
+else:
+    application = app()
