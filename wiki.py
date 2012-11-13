@@ -69,7 +69,9 @@ def get_html_revision(name, revision):
 
         if result is None:
             settings = {"stylesheet_path": "/static/html4css1.css,/static/main.css",
-                        "embed_stylesheet": False}
+                        "embed_stylesheet": False,
+                        "file_insertion_enabled": False,
+                        "raw_enabled": False}
             content = publish_string(get_page_revision(name, revision),
                                      writer_name="html",
                                      settings_overrides=settings)
