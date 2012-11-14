@@ -10,8 +10,9 @@ from tempfile import TemporaryDirectory
 import pygit2 as git
 import scrypt
 import sqlalchemy as sql
-from bottle import app, get, post, redirect, response, request, run, static_file, view
+from bottle import app, get, post, redirect, response, request, run, static_file, template, view
 from docutils.core import publish_string
+from docutils.writers import html4css1
 
 engine = sql.create_engine("sqlite:///wiki.sqlite3")
 metadata = sql.MetaData()
@@ -28,6 +29,7 @@ users = sql.Table("users", metadata,
 generated = sql.Table("generated", metadata,
                       sql.Column("name", sql.String, primary_key = True),
                       sql.Column("revision", sql.String, primary_key = True),
+                      sql.Column("navigation", sql.Boolean, primary_key = True),
                       sql.Column("content", sql.String, nullable = False))
 
 metadata.create_all(engine)
@@ -60,10 +62,16 @@ def check_token(token):
 def get_page_revision(name, revision):
     return repo[repo[revision].tree[name + ".rst"].oid].data
 
-def get_html_revision(name, revision):
+def get_html_revision(name, revision, navigation):
+    class NavigationHTMLTranslator(html4css1.HTMLTranslator):
+        def __init__(self, document):
+            super().__init__(document)
+            self.body_prefix = [template("body_prefix.html", name=name)]
+
     with engine.connect() as connection:
         s = sql.select([generated.c.content],
-                       (generated.c.name == name) & (generated.c.revision == revision))
+                       (generated.c.name == name) & (generated.c.revision == revision) &
+                       (generated.c.navigation == navigation))
         result = connection.execute(s).first()
 
         if result is None:
@@ -71,11 +79,16 @@ def get_html_revision(name, revision):
                         "embed_stylesheet": False,
                         "file_insertion_enabled": False,
                         "raw_enabled": False}
+            writer = html4css1.Writer()
+            if navigation:
+                writer.translator_class = NavigationHTMLTranslator
             content = publish_string(get_page_revision(name, revision),
                                      writer_name="html",
+                                     writer=writer,
                                      settings_overrides=settings)
             connection.execute(generated.insert().values(name=name,
                                                          revision=revision,
+                                                         navigation=navigation,
                                                          content=content))
             return content
 
@@ -106,7 +119,12 @@ def rst_page(filename):
 @get('/page/<filename>.html')
 def html_page(filename):
     revision = request.query.get("revision", repo.head.hex)
-    return get_html_revision(filename, revision)
+    return get_html_revision(filename, revision, False)
+
+@get('/nav/<filename>.html')
+def nav_page(filename):
+    revision = request.query.get("revision", repo.head.hex)
+    return get_html_revision(filename, revision, True)
 
 @get('/static/<filename>.css')
 def css(filename):
