@@ -259,6 +259,17 @@ def json_edit(filename):
 
     edit(filename, message, page, username)
 
+@get('/<revision>/revert.html')
+@view("revert.html")
+def html_revert(revision):
+    token = request.get_cookie("token")
+    if token is None:
+        redirect('/login.html?' + urlencode({"url": request.url}))
+    username = check_token(token)
+    form_token = make_token(username + "-revert")
+
+    return dict(token=form_token)
+
 @post('/<revision>/revert.json')
 def json_revert(revision):
     target = repo[revision]

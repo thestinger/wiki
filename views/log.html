@@ -12,7 +12,7 @@
         <time>{{change["time"]}}</time>
         {{change["author"]}}
         {{change["message"].split("\n", 1)[0]}}
-        {{change["revision"]}}
+        <a href="/{{change["revision"]}}/revert.html">revert</a>
       </li>
 %end
     </ul>
