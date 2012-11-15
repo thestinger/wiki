@@ -16,6 +16,8 @@ from docutils.core import publish_string
 
 from writer import HTMLTranslator, Writer
 
+class Error(Exception): pass
+
 engine = sql.create_engine("sqlite:///wiki.sqlite3")
 metadata = sql.MetaData()
 metadata.bind = engine
@@ -270,15 +272,7 @@ def html_revert(revision):
 
     return dict(token=form_token)
 
-@post('/<revision>/revert.json')
-def json_revert(revision):
-    target = repo[revision]
-    token = request.json["token"]
-
-    username = check_token(token)
-    if username is None:
-        return {"error": "invalid login token"}
-
+def revert(username, target):
     tree = target.tree
     parent_tree = target.parents[0].tree
 
@@ -297,9 +291,39 @@ def json_revert(revision):
             result, _ = p.communicate(diff.patch)
 
     if current == result:
-        return {"error": "an edit must make changes"}
+        raise Error("an edit must make changes")
 
     edit(name, 'Revert "{}"'.format(target.message.split("\n", 1)[0]), result, username)
+
+    return name
+
+@post('/<revision>/revert.html')
+def form_revert(revision):
+    target = repo[revision]
+    form_token = request.forms["token"]
+    token = request.get_cookie("token")
+
+    username = check_token(token)
+
+    if check_token(form_token) != username + "-revert":
+        return
+
+    name = revert(username, target)
+    redirect("/nav/{}.html".format(name))
+
+@post('/<revision>/revert.json')
+def json_revert(revision):
+    target = repo[revision]
+    token = request.json["token"]
+
+    username = check_token(token)
+    if username is None:
+        return {"error": "invalid login token"}
+
+    try:
+        revert(username, target)
+    except Error as e:
+        return {"error": e.args[0]}
 
 @get('/register.html')
 def html_register():
