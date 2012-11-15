@@ -13,7 +13,6 @@ import scrypt
 import sqlalchemy as sql
 from bottle import app, get, post, redirect, response, request, run, static_file, template, view
 from docutils.core import publish_string
-from docutils.writers import html4css1
 
 from writer import HTMLTranslator, Writer
 
