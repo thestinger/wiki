@@ -66,6 +66,17 @@ def check_token(token):
 def login_redirect():
     redirect('/login.html?' + urlencode({"url": request.url}))
 
+def validate_login_cookie():
+    token = request.get_cookie("token")
+    if token is None:
+        login_redirect()
+
+    username = check_token(token)
+    if username is None:
+        login_redirect()
+
+    return username
+
 def get_page_revision(name, revision):
     return repo[repo[revision].tree[name + ".rst"].oid].data
 
@@ -193,11 +204,7 @@ def json_log():
 @get('/edit/html/<filename>')
 @view("edit.html")
 def html_edit(filename):
-    token = request.get_cookie("token")
-    if token is None:
-        login_redirect()
-
-    username = check_token(token)
+    username = validate_login_cookie()
     form_token = make_token(username + "-edit")
 
     try:
@@ -268,10 +275,7 @@ def json_edit(filename):
 @get('/<revision>/revert.html')
 @view("revert.html")
 def html_revert(revision):
-    token = request.get_cookie("token")
-    if token is None:
-        login_redirect()
-    username = check_token(token)
+    username = validate_login_cookie()
     form_token = make_token(username + "-revert")
 
     return dict(token=form_token)
