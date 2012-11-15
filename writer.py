@@ -3,7 +3,7 @@
 from docutils.writers import html4css1
 
 class HTMLTranslator(html4css1.HTMLTranslator):
-    doctype = "<!doctype html>\n"
+    doctype = "<!DOCTYPE html>\n"
     doctype_mathml = doctype
 
 class Writer(html4css1.Writer):
