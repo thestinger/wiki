@@ -244,7 +244,7 @@ def form_edit(filename):
 
     edit(filename, message, page, username)
 
-    redirect('/page/{}.html'.format(filename))
+    redirect('/nav/{}.html'.format(filename))
 
 @post('/edit/json/<filename>')
 def json_edit(filename):
