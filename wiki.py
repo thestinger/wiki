@@ -81,7 +81,8 @@ def get_html_revision(name, revision, navigation):
             settings = {"stylesheet_path": "/static/html4css1.css,/static/main.css",
                         "embed_stylesheet": False,
                         "file_insertion_enabled": False,
-                        "raw_enabled": False}
+                        "raw_enabled": False,
+                        "xml_declaration": False}
             writer = Writer()
             if navigation:
                 writer.translator_class = NavigationHTMLTranslator
