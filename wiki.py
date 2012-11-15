@@ -63,6 +63,9 @@ def check_token(token):
     if hmac.compare_digest(mac, generate_mac(value)):
         return value
 
+def login_redirect():
+    redirect('/login.html?' + urlencode({"url": request.url}))
+
 def get_page_revision(name, revision):
     return repo[repo[revision].tree[name + ".rst"].oid].data
 
@@ -192,7 +195,8 @@ def json_log():
 def html_edit(filename):
     token = request.get_cookie("token")
     if token is None:
-        redirect('/login.html?' + urlencode({"url": request.url}))
+        login_redirect()
+
     username = check_token(token)
     form_token = make_token(username + "-edit")
 
@@ -266,7 +270,7 @@ def json_edit(filename):
 def html_revert(revision):
     token = request.get_cookie("token")
     if token is None:
-        redirect('/login.html?' + urlencode({"url": request.url}))
+        login_redirect()
     username = check_token(token)
     form_token = make_token(username + "-revert")
 
