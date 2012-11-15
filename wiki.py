@@ -6,6 +6,7 @@ from hashlib import sha256
 from os import path, urandom
 from subprocess import Popen, PIPE
 from tempfile import TemporaryDirectory
+from urllib.parse import urlencode
 
 import pygit2 as git
 import scrypt
@@ -13,6 +14,8 @@ import sqlalchemy as sql
 from bottle import app, get, post, redirect, response, request, run, static_file, template, view
 from docutils.core import publish_string
 from docutils.writers import html4css1
+
+from writer import HTMLTranslator, Writer
 
 engine = sql.create_engine("sqlite:///wiki.sqlite3")
 metadata = sql.MetaData()
@@ -63,7 +66,7 @@ def get_page_revision(name, revision):
     return repo[repo[revision].tree[name + ".rst"].oid].data
 
 def get_html_revision(name, revision, navigation):
-    class NavigationHTMLTranslator(html4css1.HTMLTranslator):
+    class NavigationHTMLTranslator(HTMLTranslator):
         def __init__(self, document):
             super().__init__(document)
             self.body_prefix = [template("body_prefix.html", name=name)]
@@ -79,7 +82,7 @@ def get_html_revision(name, revision, navigation):
                         "embed_stylesheet": False,
                         "file_insertion_enabled": False,
                         "raw_enabled": False}
-            writer = html4css1.Writer()
+            writer = Writer()
             if navigation:
                 writer.translator_class = NavigationHTMLTranslator
             content = publish_string(get_page_revision(name, revision),
@@ -187,7 +190,7 @@ def json_log():
 def html_edit(filename):
     token = request.get_cookie("token")
     if token is None:
-        redirect('/login.html')
+        redirect('/login.html?' + urlencode({"url": request.url}))
     username = check_token(token)
     form_token = make_token(username + "-edit")
 
@@ -327,8 +330,9 @@ def json_register():
     return {"token": make_token(username)}
 
 @get('/login.html')
+@view('login.html')
 def html_login():
-    return static_file("login.html", root="static")
+    return {"url": request.query.get("url", "/")}
 
 def login(username, password):
     select = sql.select([users.c.password_hash, users.c.password_salt],
@@ -346,7 +350,7 @@ def form_login():
     password = request.forms["password"]
 
     response.set_cookie("token", login(username, password))
-    redirect("/")
+    redirect(request.forms.get("url", "/"))
 
 @post('/login.json')
 def json_login():
