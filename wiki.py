@@ -90,9 +90,8 @@ def get_html_revision(name, revision, navigation):
         s = sql.select([generated.c.content],
                        (generated.c.name == name) & (generated.c.revision == revision) &
                        (generated.c.navigation == navigation))
-        result = connection.execute(s).first()
-
-        if result is None:
+        content = connection.execute(s).scalar()
+        if content is None:
             settings = {"stylesheet_path": "/static/html4css1.css,/static/main.css",
                         "embed_stylesheet": False,
                         "file_insertion_enabled": False,
@@ -109,9 +108,7 @@ def get_html_revision(name, revision, navigation):
                                                          revision=revision,
                                                          navigation=navigation,
                                                          content=content))
-            return content
-
-        return result[0]
+        return content
 
 @get('/')
 def index():
