@@ -186,6 +186,8 @@ def json_log():
 @view("edit.html")
 def html_edit(filename):
     token = request.get_cookie("token")
+    if token is None:
+        redirect('/login.html')
     username = check_token(token)
     form_token = make_token(username + "-edit")
 
