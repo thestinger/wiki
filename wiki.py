@@ -80,30 +80,33 @@ def validate_login_cookie():
 def get_page_revision(name, revision):
     return repo[repo[revision].tree[name + ".rst"].oid].data
 
-def get_html_revision(name, revision, navigation):
+def render_html(name, source, navigation):
     class NavigationHTMLTranslator(HTMLTranslator):
         def __init__(self, document):
             super().__init__(document)
             self.body_prefix = [template("body_prefix.html", name=name)]
 
+    writer = Writer()
+    if navigation:
+        writer.translator_class = NavigationHTMLTranslator
+
+    settings = {"stylesheet_path": "/static/html4css1.css,/static/main.css",
+                "embed_stylesheet": False,
+                "file_insertion_enabled": False,
+                "raw_enabled": False,
+                "xml_declaration": False}
+
+    return publish_string(source, writer_name="html", writer=writer,
+                          settings_overrides=settings)
+
+def get_html_revision(name, revision, navigation):
     with engine.connect() as connection:
         s = sql.select([generated.c.content],
                        (generated.c.name == name) & (generated.c.revision == revision) &
                        (generated.c.navigation == navigation))
         content = connection.execute(s).scalar()
         if content is None:
-            settings = {"stylesheet_path": "/static/html4css1.css,/static/main.css",
-                        "embed_stylesheet": False,
-                        "file_insertion_enabled": False,
-                        "raw_enabled": False,
-                        "xml_declaration": False}
-            writer = Writer()
-            if navigation:
-                writer.translator_class = NavigationHTMLTranslator
-            content = publish_string(get_page_revision(name, revision),
-                                     writer_name="html",
-                                     writer=writer,
-                                     settings_overrides=settings)
+            content = render_html(name, get_page_revision(name, revision), navigation)
             connection.execute(generated.insert().values(name=name,
                                                          revision=revision,
                                                          navigation=navigation,
