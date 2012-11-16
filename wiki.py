@@ -215,6 +215,9 @@ def html_edit(filename):
     return dict(content=blob, name=filename, token=form_token)
 
 def edit(name, message, page, username):
+    # verify that the source is valid
+    render_html(name, page, False)
+
     email, = engine.execute(sql.select([users.c.email],
                                        users.c.username == username)).first()
     signature = git.Signature(username, email)

@@ -3,8 +3,6 @@
 * search results should give context, with highlighted matches
 * friendlier error handling (almost all invalid input just bubbles up an
   exception to a 500 error at the moment)
-* editing interfaces need to verify that the content is valid before allowing
-  it to be committed
 * navigation needs to be overhauled and styled sanely
 * there is a lot of duplication between the html snippets, which should be
   dealt with via templates (static ones or just bottle's SimpleTemplate?)
