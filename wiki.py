@@ -218,8 +218,8 @@ def edit(name, message, page, username):
     # verify that the source is valid
     render_html(name, page, False)
 
-    email, = engine.execute(sql.select([users.c.email],
-                                       users.c.username == username)).first()
+    email = engine.execute(sql.select([users.c.email],
+                                      users.c.username == username)).scalar()
     signature = git.Signature(username, email)
 
     oid = repo.write(git.GIT_OBJ_BLOB, page)
