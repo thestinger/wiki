@@ -283,6 +283,21 @@ def html_revert(revision):
 
     return dict(token=form_token)
 
+def diff(revision):
+    target = repo[revision]
+    tree = target.tree
+    parent_tree = target.parents[0].tree
+    return {"patch": parent_tree.diff(tree).patch.decode()}
+
+@get('/<revision>/diff.html')
+@view('diff.html')
+def html_diff(revision):
+    return diff(revision)
+
+@get('/<revision>/diff.json')
+def json_diff(revision):
+    return diff(revision)
+
 def revert(username, target):
     tree = target.tree
     parent_tree = target.parents[0].tree

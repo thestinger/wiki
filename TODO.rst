@@ -1,4 +1,3 @@
-* diffs (plain text, and visual html diffs)
 * edit previews
 * search results should give context, with highlighted matches
 * friendlier error handling (almost all invalid input just bubbles up an
@@ -13,3 +12,10 @@
   elements
 * one possibility for handling discussions is to use git-notes, like github
   does for commenting on commits
+
+diffs
+=====
+
+* syntax highlighting
+* diff between any revisions
+* visual html diffs
