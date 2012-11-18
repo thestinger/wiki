@@ -13,6 +13,7 @@ import scrypt
 import sqlalchemy as sql
 from bottle import app, get, post, redirect, response, request, run, static_file, template, view
 from docutils.core import publish_string
+from lxml.html.diff import htmldiff
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import DiffLexer
@@ -297,6 +298,26 @@ def get_patch(revision):
 def html_diff(revision):
     patch = get_patch(revision)
     return {"patch": highlight(patch, DiffLexer(), HtmlFormatter())}
+
+@get('/<revision>/visual_diff.html')
+@view('diff.html')
+def visual_diff(revision):
+    target = repo[revision]
+    parent = target.parents[0]
+
+    tree = target.tree
+    parent_tree = target.parents[0].tree
+
+    diff = parent_tree.diff(tree)
+
+    filename = diff.changes["files"][0][0]
+    name = filename[:-4]
+
+    target_html = get_html_revision(name, revision, False).decode()
+    parent_html = (get_html_revision(name, parent.hex, False).decode()
+                   if filename in parent_tree else "")
+
+    return {"patch": htmldiff(parent_html, target_html)}
 
 @get('/<revision>/diff.json')
 def json_diff(revision):

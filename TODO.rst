@@ -12,9 +12,4 @@
   elements
 * one possibility for handling discussions is to use git-notes, like github
   does for commenting on commits
-
-diffs
-=====
-
 * diff between any revisions
-* visual html diffs

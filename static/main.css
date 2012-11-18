@@ -15,6 +15,18 @@ nav form {
   display: inline-block;
 }
 
+ins, del {
+  text-decoration: none;
+}
+
+ins {
+  background: #bfb;
+}
+
+del {
+  background: #fcc;
+}
+
 /* Pygments {{{ */
 .hll { background-color: #ffffcc }
 .c { color: #93a1a1; font-style: italic } /* Comment */
