@@ -13,6 +13,9 @@ import scrypt
 import sqlalchemy as sql
 from bottle import app, get, post, redirect, response, request, run, static_file, template, view
 from docutils.core import publish_string
+from pygments import highlight
+from pygments.formatters import HtmlFormatter
+from pygments.lexers import DiffLexer
 
 from writer import HTMLTranslator, Writer
 
@@ -283,20 +286,21 @@ def html_revert(revision):
 
     return dict(token=form_token)
 
-def diff(revision):
+def get_patch(revision):
     target = repo[revision]
     tree = target.tree
     parent_tree = target.parents[0].tree
-    return {"patch": parent_tree.diff(tree).patch.decode()}
+    return parent_tree.diff(tree).patch.decode()
 
 @get('/<revision>/diff.html')
 @view('diff.html')
 def html_diff(revision):
-    return diff(revision)
+    patch = get_patch(revision)
+    return {"patch": highlight(patch, DiffLexer(), HtmlFormatter())}
 
 @get('/<revision>/diff.json')
 def json_diff(revision):
-    return diff(revision)
+    return {"patch": get_patch(revision)}
 
 def revert(username, target):
     tree = target.tree

@@ -16,6 +16,5 @@
 diffs
 =====
 
-* syntax highlighting
 * diff between any revisions
 * visual html diffs
