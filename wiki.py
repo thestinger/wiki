@@ -3,7 +3,7 @@
 import hmac
 from datetime import datetime
 from hashlib import sha256
-from os import path, urandom
+from os import path, statvfs, urandom
 from subprocess import Popen, PIPE
 from tempfile import TemporaryDirectory
 from urllib.parse import urlencode
@@ -454,6 +454,13 @@ def json_login():
         return {"error": "invalid password"}
 
 def main():
+    bsize = statvfs('.').f_bsize
+    page_size = engine.execute("PRAGMA page_size").scalar()
+
+    if page_size != bsize:
+        engine.execute("PRAGMA page_size = " + str(bsize))
+        engine.execute("VACUUM")
+
     if 'refs/heads/master' not in repo.listall_references():
         author = git.Signature('wiki', 'danielmicay@gmail.com')
         tree = repo.TreeBuilder().write()
