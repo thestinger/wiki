@@ -178,7 +178,7 @@ def page_log(page, commits):
             yield commit
 
 def log():
-    commits = repo.walk(repo.head.oid, git.GIT_SORT_TIME)
+    commits = list(repo.walk(repo.head.oid, git.GIT_SORT_TIME))[:-1]
 
     try:
         page = request.query["page"] + ".rst"
