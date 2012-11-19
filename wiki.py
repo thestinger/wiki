@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import hmac
 from datetime import datetime
-from hashlib import sha256
+from hmac import compare_digest
 from os import path, statvfs, urandom
 from subprocess import Popen, PIPE
 from tempfile import TemporaryDirectory
@@ -18,6 +17,7 @@ from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import DiffLexer
 
+from sign import check_token, make_token
 from writer import HTMLTranslator, Writer
 
 class Error(Exception): pass
@@ -55,18 +55,6 @@ except FileNotFoundError:
         KEY = urandom(256)
         f.write(KEY)
 
-def generate_mac(s):
-    return hmac.new(KEY, s.encode(), sha256).hexdigest()
-
-def make_token(value):
-    return "-".join((generate_mac(value), value))
-
-def check_token(token):
-    "Return the value if the token is valid, otherwise None."
-    mac, value = token.split('-', 1)
-    if hmac.compare_digest(mac, generate_mac(value)):
-        return value
-
 def login_redirect():
     redirect('/login.html?' + urlencode({"url": request.url}))
 
@@ -75,7 +63,7 @@ def validate_login_cookie():
     if token is None:
         login_redirect()
 
-    username = check_token(token)
+    username = check_token(KEY, token)
     if username is None:
         login_redirect()
 
@@ -209,7 +197,7 @@ def json_log():
 @view("edit.html")
 def html_edit(filename):
     username = validate_login_cookie()
-    form_token = make_token(username + "-edit")
+    form_token = make_token(KEY, username + "-edit")
 
     try:
         blob = get_page_revision(filename, repo.head.oid)
@@ -252,9 +240,9 @@ def form_edit(filename):
     form_token = request.forms["token"]
     token = request.get_cookie("token")
 
-    username = check_token(token)
+    username = check_token(KEY, token)
 
-    if check_token(form_token) != username + "-edit":
+    if check_token(KEY, form_token) != username + "-edit":
         return
 
     if not is_changed(filename, page):
@@ -273,7 +261,7 @@ def json_edit(filename):
     if not is_changed(filename, page):
         return {"error": "an edit must make changes"}
 
-    username = check_token(token)
+    username = check_token(KEY, token)
     if username is None:
         return {"error": "invalid login token"}
 
@@ -283,7 +271,7 @@ def json_edit(filename):
 @view("revert.html")
 def html_revert(revision):
     username = validate_login_cookie()
-    form_token = make_token(username + "-revert")
+    form_token = make_token(KEY, username + "-revert")
 
     return dict(token=form_token)
 
@@ -354,9 +342,9 @@ def form_revert(revision):
     form_token = request.forms["token"]
     token = request.get_cookie("token")
 
-    username = check_token(token)
+    username = check_token(KEY, token)
 
-    if check_token(form_token) != username + "-revert":
+    if check_token(KEY, form_token) != username + "-revert":
         return
 
     name = revert(username, target)
@@ -367,7 +355,7 @@ def json_revert(revision):
     target = repo[revision]
     token = request.json["token"]
 
-    username = check_token(token)
+    username = check_token(KEY, token)
     if username is None:
         return {"error": "invalid login token"}
 
@@ -396,7 +384,7 @@ def form_register():
 
     register(username, password, email)
 
-    response.set_cookie("token", make_token(username))
+    response.set_cookie("token", make_token(KEY, username))
     redirect("/")
 
 @post('/register.json')
@@ -413,7 +401,7 @@ def json_register():
     except sql.exc.IntegrityError:
         return {"error": "username already registered"}
 
-    return {"token": make_token(username)}
+    return {"token": make_token(KEY, username)}
 
 @get('/login.html')
 @view('login.html')
@@ -425,10 +413,10 @@ def login(username, password):
                         users.c.username == username)
     hashed, salt = engine.execute(select).first()
 
-    if not hmac.compare_digest(hashed, scrypt.hash(password, salt)):
+    if not compare_digest(hashed, scrypt.hash(password, salt)):
         raise ValueError("invalid password")
 
-    return make_token(username)
+    return make_token(KEY, username)
 
 @post('/login.html')
 def form_login():
