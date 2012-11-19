@@ -35,14 +35,14 @@ users = sql.Table("users", metadata,
                   sql.Column("password_salt", sql.Binary, nullable = False))
 
 generated = sql.Table("generated", metadata,
-                      sql.Column("name", sql.String, primary_key = True),
+                      sql.Column("title", sql.String, primary_key = True),
                       sql.Column("revision", sql.String, primary_key = True),
                       sql.Column("navigation", sql.Boolean, primary_key = True),
                       sql.Column("content", sql.String, nullable = False))
 
 metadata.create_all(engine)
 
-engine.execute('CREATE VIRTUAL TABLE IF NOT EXISTS corpus USING fts4(name, page)')
+engine.execute('CREATE VIRTUAL TABLE IF NOT EXISTS corpus USING fts4(title, page)')
 corpus = sql.Table("corpus", metadata, autoload=True)
 
 repo = git.init_repository("repo", True)
@@ -91,15 +91,17 @@ def render_html(name, source, navigation):
     return publish_string(source, writer_name="html", writer=writer,
                           settings_overrides=settings)
 
-def get_html_revision(name, revision, navigation):
+def get_html_revision(title, revision, navigation):
     with engine.connect() as connection:
         s = sql.select([generated.c.content],
-                       (generated.c.name == name) & (generated.c.revision == revision) &
+                       (generated.c.title == title) &
+                       (generated.c.revision == revision) &
                        (generated.c.navigation == navigation))
         content = connection.execute(s).scalar()
         if content is None:
-            content = render_html(name, get_page_revision(name, revision), navigation)
-            connection.execute(generated.insert().values(name=name,
+            content = render_html(title, get_page_revision(title, revision),
+                                  navigation)
+            connection.execute(generated.insert().values(title=title,
                                                          revision=revision,
                                                          navigation=navigation,
                                                          content=content))
@@ -143,7 +145,7 @@ def css(filename):
 
 def search():
     query = request.query["query"]
-    result = engine.execute("select name from corpus where corpus match ?", (query,))
+    result = engine.execute("select title from corpus where corpus match ?", (query,))
     return {"matches": [name for name, in result]}
 
 @get('/search.html')
@@ -206,9 +208,9 @@ def html_edit(filename):
 
     return dict(content=blob, name=filename, token=form_token)
 
-def edit(name, message, page, username):
+def edit(title, message, page, username):
     # verify that the source is valid
-    render_html(name, page, False)
+    render_html(title, page, False)
 
     email = engine.execute(sql.select([users.c.email],
                                       users.c.username == username)).scalar()
@@ -216,14 +218,14 @@ def edit(name, message, page, username):
 
     oid = repo.write(git.GIT_OBJ_BLOB, page)
     bld = repo.TreeBuilder(repo.head.tree)
-    bld.insert(name + '.rst', oid, 100644)
+    bld.insert(title + '.rst', oid, 100644)
     tree = bld.write()
     repo.create_commit('refs/heads/master', signature, signature, message,
                        tree, [repo.head.oid])
 
     with engine.connect() as c:
-        c.execute(corpus.delete().where(corpus.c.name == name))
-        c.execute(corpus.insert().values(name=name, page=page))
+        c.execute(corpus.delete().where(corpus.c.title == title))
+        c.execute(corpus.insert().values(title=title, page=page))
 
 def is_changed(name, content):
     filename = name + '.rst'
