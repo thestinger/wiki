@@ -182,20 +182,20 @@ def log():
     except KeyError:
         pass
 
-    return {"log": [{"message": c.message,
-                     "author": c.author.name,
-                     "time": datetime.fromtimestamp(c.author.time).isoformat() + "Z",
-                     "revision": c.hex}
-                    for c in commits]}
+    return [{"message": c.message,
+             "author": c.author.name,
+             "time": datetime.fromtimestamp(c.author.time).isoformat() + "Z",
+             "revision": c.hex}
+            for c in commits]
 
 @get('/log.html')
 @view('log.html')
 def html_log():
-    return log()
+    return {"log": log(), "name": request.query.get("page")}
 
 @get('/log.json')
 def json_log():
-    return log()
+    return {"log": log()}
 
 @get('/edit/html/<filename>')
 @view("edit.html")

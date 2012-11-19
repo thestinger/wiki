@@ -6,6 +6,14 @@
     <link rel="stylesheet" href="/static/main.css"/>
   </head>
   <body>
+%if name is not None:
+    <nav>
+      <a href="/nav/{{name}}.html">page</a>
+      <a href="/page/{{name}}.html">printable</a>
+      <a href="/edit/html/{{name}}">edit</a>
+      <a href="/log.html?page={{name}}">history</a>
+    </nav>
+%end
     <ul>
 %for change in log:
       <li>
