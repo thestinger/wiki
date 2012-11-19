@@ -22,7 +22,9 @@ from writer import HTMLTranslator, Writer
 
 class Error(Exception): pass
 
-engine = sql.create_engine("sqlite:///wiki.sqlite3")
+engine = sql.create_engine("sqlite:///wiki.sqlite3",
+                           connect_args={'check_same_thread': False},
+                           poolclass=sql.pool.QueuePool)
 metadata = sql.MetaData()
 metadata.bind = engine
 
