@@ -87,6 +87,7 @@ def render_html(name, source, navigation):
     settings = {"stylesheet_path": "/static/html4css1.css,/static/main.css",
                 "embed_stylesheet": False,
                 "file_insertion_enabled": False,
+                "output_encoding": "unicode",
                 "raw_enabled": False,
                 "xml_declaration": False}
 
@@ -305,8 +306,8 @@ def visual_diff(revision):
     filename = diff.changes["files"][0][0]
     name = filename[:-4]
 
-    target_html = get_html_revision(name, revision, False).decode()
-    parent_html = (get_html_revision(name, parent.hex, False).decode()
+    target_html = get_html_revision(name, revision, False)
+    parent_html = (get_html_revision(name, parent.hex, False)
                    if filename in parent_tree else "")
 
     return {"patch": htmldiff(parent_html, target_html)}
