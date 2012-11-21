@@ -239,10 +239,19 @@ def is_changed(name, content):
 
 @post('/edit/html/<filename>')
 def form_edit(filename):
+    action = request.forms["action"]
     message = request.forms["message"]
     page = request.forms["page"]
     form_token = request.forms["token"]
     token = request.get_cookie("token")
+
+    if action == "Preview":
+        class PreviewHTMLTranslator(HTMLTranslator):
+            def __init__(self, document):
+                super().__init__(document)
+                self.body_prefix = [template("body_prefix.html", name=filename)]
+                self.body_suffix = [template("edit_suffix.html", content=page, token=form_token)]
+        return render_html(filename, page, PreviewHTMLTranslator)
 
     username = check_token(KEY, token)
 

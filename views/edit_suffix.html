@@ -1,0 +1,12 @@
+    <form method="post">
+      <textarea cols="79" rows="25" name="page">{{content}}</textarea>
+      <p><label for="message">Message</label></p>
+      <p><input name="message" id="message" size="50"/></p>
+      <input type="hidden" name="token" value="{{token}}"/>
+      <p>
+        <input name="action" type="submit" value="Save"/>
+        <input name="action" type="submit" value="Preview"/>
+      </p>
+    </form>
+  </body>
+</html>

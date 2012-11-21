@@ -1,4 +1,3 @@
-* edit previews
 * search results should give context, with highlighted matches
 * friendlier error handling (almost all invalid input just bubbles up an
   exception to a 500 error at the moment)
