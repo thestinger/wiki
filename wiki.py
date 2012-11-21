@@ -74,15 +74,9 @@ def validate_login_cookie():
 def get_page_revision(name, revision):
     return repo[repo[revision].tree[name + ".rst"].oid].data
 
-def render_html(name, source, navigation):
-    class NavigationHTMLTranslator(HTMLTranslator):
-        def __init__(self, document):
-            super().__init__(document)
-            self.body_prefix = [template("body_prefix.html", name=name)]
-
+def render_html(name, source, translator_class=HTMLTranslator):
     writer = Writer()
-    if navigation:
-        writer.translator_class = NavigationHTMLTranslator
+    writer.translator_class = translator_class
 
     settings = {"stylesheet_path": "/static/html4css1.css,/static/main.css",
                 "embed_stylesheet": False,
@@ -102,8 +96,13 @@ def get_html_revision(title, revision, navigation):
                        (generated.c.navigation == navigation))
         content = connection.execute(s).scalar()
         if content is None:
+            class NavigationHTMLTranslator(HTMLTranslator):
+                def __init__(self, document):
+                    super().__init__(document)
+                    self.body_prefix = [template("body_prefix.html", name=title)]
+
             content = render_html(title, get_page_revision(title, revision),
-                                  navigation)
+                                  NavigationHTMLTranslator if navigation else None)
             connection.execute(generated.insert().values(title=title,
                                                          revision=revision,
                                                          navigation=navigation,
