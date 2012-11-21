@@ -74,9 +74,10 @@ def validate_login_cookie():
 def get_page_revision(name, revision):
     return repo[repo[revision].tree[name + ".rst"].oid].data
 
-def render_html(name, source, translator_class=HTMLTranslator):
+def render_html(name, source, translator_class=None):
     writer = Writer()
-    writer.translator_class = translator_class
+    if translator_class is not None:
+        writer.translator_class = translator_class
 
     settings = {"stylesheet_path": "/static/html4css1.css,/static/main.css",
                 "embed_stylesheet": False,
