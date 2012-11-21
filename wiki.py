@@ -212,7 +212,7 @@ def html_edit(filename):
 
 def edit(title, message, page, username):
     # verify that the source is valid
-    render_html(title, page, False)
+    render_html(title, page)
 
     email = engine.execute(sql.select([users.c.email],
                                       users.c.username == username)).scalar()
