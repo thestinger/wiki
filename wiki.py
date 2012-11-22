@@ -126,25 +126,25 @@ def html_list_pages():
 def json_list_pages():
     return list_pages()
 
-@get('/page/<filename>.rst')
-def rst_page(filename):
+@get('/page/<title>.rst')
+def rst_page(title):
     response.content_type = "text/x-rst; charset=UTF-8"
     revision = request.query.get("revision", repo.head.hex)
-    return get_page_revision(filename, revision)
+    return get_page_revision(title, revision)
 
-@get('/page/<filename>.html')
-def html_page(filename):
+@get('/page/<title>.html')
+def html_page(title):
     revision = request.query.get("revision", repo.head.hex)
-    return get_html_revision(filename, revision, False)
+    return get_html_revision(title, revision, False)
 
-@get('/nav/<filename>.html')
-def nav_page(filename):
+@get('/nav/<title>.html')
+def nav_page(title):
     revision = request.query.get("revision", repo.head.hex)
-    return get_html_revision(filename, revision, True)
+    return get_html_revision(title, revision, True)
 
-@get('/static/<filename>.css')
-def css(filename):
-    return static_file(filename + ".css", root="static")
+@get('/static/<name>.css')
+def css(name):
+    return static_file(name + ".css", root="static")
 
 def search():
     query = request.query["query"]
@@ -204,18 +204,18 @@ def html_log():
 def json_log():
     return {"log": log()}
 
-@get('/edit/html/<filename>')
+@get('/edit/html/<title>')
 @view("edit.html")
-def html_edit(filename):
+def html_edit(title):
     username = validate_login_cookie()
     form_token = make_token(KEY, username + "-edit")
 
     try:
-        blob = get_page_revision(filename, repo.head.oid)
-    except KeyError: # filename.rst not in tree
+        blob = get_page_revision(title, repo.head.oid)
+    except KeyError: # title.rst not in tree
         blob = ""
 
-    return dict(content=blob, name=filename, token=form_token)
+    return dict(content=blob, name=title, token=form_token)
 
 def edit(title, message, page, username):
     # verify that the source is valid
@@ -244,8 +244,8 @@ def is_changed(name, content):
 
     return content != get_page_revision(name, repo.head.oid).decode()
 
-@post('/edit/html/<filename>')
-def form_edit(filename):
+@post('/edit/html/<title>')
+def form_edit(title):
     action = request.forms["action"]
     message = request.forms["message"]
     page = request.forms["page"]
@@ -256,36 +256,36 @@ def form_edit(filename):
         class PreviewHTMLTranslator(HTMLTranslator):
             def __init__(self, document):
                 super().__init__(document)
-                self.body_prefix = [template("body_prefix.html", name=filename)]
+                self.body_prefix = [template("body_prefix.html", name=title)]
                 self.body_suffix = [template("edit_suffix.html", content=page, token=form_token)]
-        return render_html(filename, page, PreviewHTMLTranslator)
+        return render_html(title, page, PreviewHTMLTranslator)
 
     username = check_token(KEY, token)
 
     if check_token(KEY, form_token) != username + "-edit":
         return
 
-    if not is_changed(filename, page):
+    if not is_changed(title, page):
         redirect(request.url)
 
-    edit(filename, message, page, username)
+    edit(title, message, page, username)
 
-    redirect('/nav/{}.html'.format(filename))
+    redirect('/nav/{}.html'.format(title))
 
-@post('/edit/json/<filename>')
-def json_edit(filename):
+@post('/edit/json/<title>')
+def json_edit(title):
     message = request.json["message"]
     page = request.json["page"]
     token = request.json["token"]
 
-    if not is_changed(filename, page):
+    if not is_changed(title, page):
         return {"error": "an edit must make changes"}
 
     username = check_token(KEY, token)
     if username is None:
         return {"error": "invalid login token"}
 
-    edit(filename, message, page, username)
+    edit(title, message, page, username)
 
 @get('/<revision>/revert.html')
 @view("revert.html")
