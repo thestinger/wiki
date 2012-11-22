@@ -82,12 +82,11 @@ def render_html(name, source, translator_class=None):
     settings = {"stylesheet_path": "/static/html4css1.css,/static/main.css",
                 "embed_stylesheet": False,
                 "file_insertion_enabled": False,
-                "output_encoding": "unicode",
                 "raw_enabled": False,
                 "xml_declaration": False}
 
     return publish_string(source, writer_name="html", writer=writer,
-                          settings_overrides=settings)
+                          settings_overrides=settings).decode()
 
 def get_html_revision(title, revision, navigation):
     with engine.connect() as connection:
