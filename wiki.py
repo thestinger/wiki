@@ -405,7 +405,7 @@ def form_register():
 
     register(username, password, email)
 
-    response.set_cookie("token", make_token(KEY, username))
+    response.set_cookie("token", make_token(KEY, username), httponly=True)
     redirect("/")
 
 @post('/register.json')
@@ -444,7 +444,7 @@ def form_login():
     username = request.forms["username"]
     password = request.forms["password"]
 
-    response.set_cookie("token", login(username, password))
+    response.set_cookie("token", login(username, password), httponly=True)
     redirect(request.forms.get("url", "/"))
 
 @post('/login.json')
