@@ -6,7 +6,9 @@
     <link rel="stylesheet" href="/static/main.css"/>
   </head>
   <body>
-%if name is not None:
+%if name is None:
+  %include site_nav.html
+%else:
   %include nav.html name=name
 %end
     <ul>

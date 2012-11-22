@@ -111,8 +111,9 @@ def get_html_revision(title, revision, navigation):
         return content
 
 @get('/')
+@view('index.html')
 def index():
-    return static_file("index.html", root="static")
+    return {}
 
 def list_pages():
     return {"pages": [p.name[:-4] for p in repo.head.tree]}
@@ -379,8 +380,9 @@ def json_revert(revision):
         return {"error": e.args[0]}
 
 @get('/register.html')
+@view('register.html')
 def html_register():
-    return static_file("register.html", root="static")
+    return {}
 
 def register(username, password, email):
     salt = urandom(64)
