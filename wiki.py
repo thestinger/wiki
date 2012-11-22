@@ -174,19 +174,25 @@ def page_log(page, commits):
         if any(x[0] == page for x in files):
             yield commit
 
+def get_changed(commit):
+    tree = commit.tree
+    parent_tree = commit.parents[0].tree
+    diff = parent_tree.diff(tree)
+    files = diff.changes["files"]
+    return files[0][0]
+
 def log():
     commits = list(repo.walk(repo.head.oid, git.GIT_SORT_TIME))[:-1]
 
-    try:
-        page = request.query["page"] + ".rst"
-        commits = page_log(page, commits)
-    except KeyError:
-        pass
+    page = request.query.get("page")
+    if page is not None:
+        commits = page_log(page + ".rst", commits)
 
     return [{"message": c.message,
              "author": c.author.name,
              "time": datetime.fromtimestamp(c.author.time).isoformat() + "Z",
-             "revision": c.hex}
+             "revision": c.hex,
+             "page": page if page is not None else get_changed(c)[:-4]}
             for c in commits]
 
 @get('/log.html')
