@@ -179,6 +179,10 @@ def get_changed(commit):
     parent_tree = commit.parents[0].tree
     diff = parent_tree.diff(tree)
     files = diff.changes["files"]
+    if len(files) == 2: # move
+        (a, *_), (b, *_) = files
+        return a if a in tree else b
+    assert len(files) == 1 # commits are a move, or an edit
     return files[0][0]
 
 def log():
