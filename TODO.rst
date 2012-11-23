@@ -10,4 +10,3 @@
 * one possibility for handling discussions is to use git-notes, like github
   does for commenting on commits
 * diff between any revisions
-* html/form interface for renaming

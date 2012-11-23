@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>move</title>
+    <link rel="stylesheet" href="/static/main.css"/>
+  </head>
+  <body>
+%include article_nav.html name=title
+    <form method="post">
+      <p><label for="destination">Destination</label></p>
+      <p><input name="destination" id="destination" required=""/></p>
+      <input type="hidden" name="token" value="{{token}}"/>
+      <input name="action" type="submit" value="Move"/>
+    </form>
+  </body>
+</html>

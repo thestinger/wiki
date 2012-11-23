@@ -289,14 +289,14 @@ def json_edit(title):
 
     edit(title, message, page, username)
 
-@post('/<title>/<new_title>/move.json')
-def json_move(title, new_title):
-    token = request.json["token"]
+@get('/<title>/move.html')
+@view('move.html')
+def html_move(title):
+    username = validate_login_cookie()
+    form_token = make_token(KEY, username + "-move")
+    return dict(title=title, token=form_token)
 
-    username = check_token(KEY, token)
-    if username is None:
-        return {"error": "invalid login token"}
-
+def move(title, new_title, username):
     blob = repo.head.tree[title + ".rst"].oid
     bld = repo.TreeBuilder(repo.head.tree)
     oid = bld.remove(title + '.rst')
@@ -305,6 +305,31 @@ def json_move(title, new_title):
 
     message = "renamed: {} -> {}".format(title, new_title)
     commit(username, message, tree)
+
+@post('/<title>/move.html')
+def form_move(title):
+    form_token = request.forms["token"]
+    destination = request.forms["destination"]
+    token = request.get_cookie("token")
+
+    username = check_token(KEY, token)
+
+    if check_token(KEY, form_token) != username + "-move":
+        return
+
+    move(title, destination, username)
+
+    redirect('/nav/' + destination + '.html')
+
+@post('/<title>/<new_title>/move.json')
+def json_move(title, new_title):
+    token = request.json["token"]
+
+    username = check_token(KEY, token)
+    if username is None:
+        return {"error": "invalid login token"}
+
+    move(title, new_title, username)
 
 @get('/<revision>/revert.html')
 @view("revert.html")
