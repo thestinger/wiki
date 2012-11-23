@@ -287,6 +287,28 @@ def json_edit(title):
 
     edit(title, message, page, username)
 
+@post('/<title>/<new_title>/move.json')
+def json_move(title, new_title):
+    token = request.json["token"]
+
+    username = check_token(KEY, token)
+    if username is None:
+        return {"error": "invalid login token"}
+
+    email = engine.execute(sql.select([users.c.email],
+                                      users.c.username == username)).scalar()
+    signature = git.Signature(username, email)
+
+    blob = repo.head.tree[title + ".rst"].oid
+    bld = repo.TreeBuilder(repo.head.tree)
+    oid = bld.remove(title + '.rst')
+    bld.insert(new_title + '.rst', blob, 100644)
+    tree = bld.write()
+
+    message = "renamed: {} -> {}".format(title, new_title)
+    repo.create_commit('refs/heads/master', signature, signature, message,
+                       tree, [repo.head.oid])
+
 @get('/<revision>/revert.html')
 @view("revert.html")
 def html_revert(revision):
