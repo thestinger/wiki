@@ -217,10 +217,12 @@ def html_edit(title):
 
     return dict(content=blob, name=title, token=form_token)
 
-def get_signature(username):
+def commit(username, message, tree):
     email = engine.execute(sql.select([users.c.email],
                                       users.c.username == username)).scalar()
-    return git.Signature(username, email)
+    signature = git.Signature(username, email)
+    repo.create_commit('refs/heads/master', signature, signature, message,
+                       tree, [repo.head.oid])
 
 def edit(title, message, page, username):
     # verify that the source is valid
@@ -230,10 +232,7 @@ def edit(title, message, page, username):
     bld = repo.TreeBuilder(repo.head.tree)
     bld.insert(title + '.rst', oid, 100644)
     tree = bld.write()
-
-    signature = get_signature(username)
-    repo.create_commit('refs/heads/master', signature, signature, message,
-                       tree, [repo.head.oid])
+    commit(username, message, tree)
 
     with engine.connect() as c:
         c.execute(corpus.delete().where(corpus.c.title == title))
@@ -305,9 +304,7 @@ def json_move(title, new_title):
     tree = bld.write()
 
     message = "renamed: {} -> {}".format(title, new_title)
-    signature = get_signature(username)
-    repo.create_commit('refs/heads/master', signature, signature, message,
-                       tree, [repo.head.oid])
+    commit(username, message, tree)
 
 @get('/<revision>/revert.html')
 @view("revert.html")
