@@ -217,18 +217,21 @@ def html_edit(title):
 
     return dict(content=blob, name=title, token=form_token)
 
+def get_signature(username):
+    email = engine.execute(sql.select([users.c.email],
+                                      users.c.username == username)).scalar()
+    return git.Signature(username, email)
+
 def edit(title, message, page, username):
     # verify that the source is valid
     render_html(title, page)
-
-    email = engine.execute(sql.select([users.c.email],
-                                      users.c.username == username)).scalar()
-    signature = git.Signature(username, email)
 
     oid = repo.write(git.GIT_OBJ_BLOB, page)
     bld = repo.TreeBuilder(repo.head.tree)
     bld.insert(title + '.rst', oid, 100644)
     tree = bld.write()
+
+    signature = get_signature(username)
     repo.create_commit('refs/heads/master', signature, signature, message,
                        tree, [repo.head.oid])
 
@@ -295,10 +298,6 @@ def json_move(title, new_title):
     if username is None:
         return {"error": "invalid login token"}
 
-    email = engine.execute(sql.select([users.c.email],
-                                      users.c.username == username)).scalar()
-    signature = git.Signature(username, email)
-
     blob = repo.head.tree[title + ".rst"].oid
     bld = repo.TreeBuilder(repo.head.tree)
     oid = bld.remove(title + '.rst')
@@ -306,6 +305,7 @@ def json_move(title, new_title):
     tree = bld.write()
 
     message = "renamed: {} -> {}".format(title, new_title)
+    signature = get_signature(username)
     repo.create_commit('refs/heads/master', signature, signature, message,
                        tree, [repo.head.oid])
 
