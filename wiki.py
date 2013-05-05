@@ -177,13 +177,12 @@ def page_log(page, commits):
 def get_changed(commit):
     tree = commit.tree
     parent_tree = commit.parents[0].tree
-    diff = parent_tree.diff(tree)
-    files = diff.changes["files"]
-    if len(files) == 2: # move
-        (a, *_), (b, *_) = files
-        return a if a in tree else b
-    assert len(files) == 1 # commits are a move, or an edit
-    return files[0][0]
+    patches = list(parent_tree.diff(tree))
+    if len(patches) == 2: # move
+        a, b = patches
+        return a.new_file_path if a.new_file_path in tree else b.old_file_path
+    assert len(patches) == 1 # commits are a move, or an edit
+    return patches[0].new_file_path
 
 def log():
     commits = list(repo.walk(repo.head.oid, git.GIT_SORT_TIME))[:-1]
