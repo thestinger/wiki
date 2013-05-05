@@ -174,15 +174,19 @@ def page_log(page, commits):
         if any(x[0] == page for x in files):
             yield commit
 
-def get_changed(commit):
-    tree = commit.tree
-    parent_tree = commit.parents[0].tree
-    patches = list(parent_tree.diff(tree))
+def get_current_name(tree, patches):
     if len(patches) == 2: # move
         a, b = patches
         return a.new_file_path if a.new_file_path in tree else b.old_file_path
     assert len(patches) == 1 # commits are a move, or an edit
     return patches[0].new_file_path
+
+def get_changed(commit):
+    tree = commit.tree
+    parent_tree = commit.parents[0].tree
+    diff = parent_tree.diff(tree)
+    patches = list(diff)
+    return get_current_name(tree, patches)
 
 def log():
     commits = list(repo.walk(repo.head.oid, git.GIT_SORT_TIME))[:-1]
@@ -364,11 +368,14 @@ def visual_diff(revision):
     parent_tree = target.parents[0].tree
 
     diff = parent_tree.diff(tree)
-
-    filename = next(iter(diff)).new_file_path
+    patches = list(diff)
+    filename = get_current_name(tree, patches)
     name = filename[:-4]
-
     target_html = get_html_revision(name, revision, False)
+
+    if len(patches) == 2:
+        return {"patch": htmldiff(target_html, target_html)}
+
     parent_html = (get_html_revision(name, parent.hex, False)
                    if filename in parent_tree else "")
 
