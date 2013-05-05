@@ -234,7 +234,7 @@ def edit(title, message, page, username):
 
     oid = repo.write(git.GIT_OBJ_BLOB, page)
     bld = repo.TreeBuilder(repo.head.tree)
-    bld.insert(title + '.rst', oid, 100644)
+    bld.insert(title + '.rst', oid, 0o100644)
     tree = bld.write()
     commit(username, message, tree)
 
