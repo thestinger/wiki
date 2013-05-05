@@ -346,7 +346,7 @@ def get_patch(revision):
     target = repo[revision]
     tree = target.tree
     parent_tree = target.parents[0].tree
-    return parent_tree.diff(tree).patch.decode()
+    return parent_tree.diff(tree).patch
 
 @get('/<revision>/diff.html')
 @view('diff.html')
