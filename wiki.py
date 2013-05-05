@@ -170,7 +170,7 @@ def page_log(page, commits):
         parent_tree = commit.parents[0].tree
 
         diff = parent_tree.diff(tree)
-        files = diff.changes["files"]
+        files = next(iter(diff)).new_file_path
         if any(x[0] == page for x in files):
             yield commit
 
@@ -365,7 +365,7 @@ def visual_diff(revision):
 
     diff = parent_tree.diff(tree)
 
-    filename = diff.changes["files"][0][0]
+    filename = next(iter(diff)).new_file_path
     name = filename[:-4]
 
     target_html = get_html_revision(name, revision, False)
@@ -384,7 +384,7 @@ def revert(username, target):
 
     diff = parent_tree.diff(tree)
 
-    filename = diff.changes["files"][0][0]
+    filename = next(iter(diff)).new_file_path
     name = filename[:-4]
 
     current = get_page_revision(name, repo.head.hex)
